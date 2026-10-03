@@ -1,0 +1,295 @@
+<!-- Floating Properties Panel -->
+@if (selectedElement) {
+  <div class="properties-popup" @panel>
+    <div class="properties-header">
+      <h4>Properties</h4>
+      <div class="header-actions">
+        <button class="close-btn" (click)="deselectElement()" aria-label="Close properties panel">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <!-- Information Banner for Text Elements -->
+    @if (selectedElement.type === 'text') {
+      <div class="info-banner">
+        <div class="info-banner-content">
+          <svg class="info-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="info-text">💡 <strong>Tip:</strong> Double-click to convert to placeholder</span>
+        </div>
+      </div>
+    }
+    <!-- Information Banner for Textarea Elements -->
+    @if (selectedElement.type === 'textarea') {
+      <div class="info-banner">
+        <div class="info-banner-content">
+          <svg class="info-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="info-text">💡 <strong>Tip:</strong> Double-click to convert to placeholder</span>
+        </div>
+      </div>
+    }
+    <div class="properties-content">
+      <!-- Text Element Properties -->
+      @if (selectedElement.type === 'text') {
+        <div class="property-group">
+          <div class="property-item">
+            <label for="textContent">Text:</label>
+            <input id="textContent" type="text" [(ngModel)]="selectedElement.content" (input)="updateElement()" placeholder="Enter text" [disabled]="!viewingMode.canEdit">
+          </div>
+          <div class="property-item">
+            <label for="fontFamily">Font Family:</label>
+            <div class="modern-dropdown" [class.disabled]="!viewingMode.canEdit">
+              <div class="dropdown-select" 
+                   (click)="viewingMode.canEdit ? toggleFontFamilyDropdown() : null"
+                   [class.active]="showFontFamilyDropdown"
+                   [class.disabled]="!viewingMode.canEdit">
+                <span class="dropdown-display">{{ selectedElement.fontFamily || 'Arial' }}</span>
+                <svg class="dropdown-arrow" 
+                     [class.rotated]="showFontFamilyDropdown"
+                     viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              
+              @if (showFontFamilyDropdown && viewingMode.canEdit) {
+                <div class="dropdown-menu">
+                  <div class="dropdown-option" 
+                       (click)="selectFontFamily('Arial')"
+                       [class.selected]="selectedElement.fontFamily === 'Arial'">
+                    <span>Arial</span>
+                  </div>
+                  <div class="dropdown-option" 
+                       (click)="selectFontFamily('Helvetica')"
+                       [class.selected]="selectedElement.fontFamily === 'Helvetica'">
+                    <span>Helvetica</span>
+                  </div>
+                  <div class="dropdown-option" 
+                       (click)="selectFontFamily('Times New Roman')"
+                       [class.selected]="selectedElement.fontFamily === 'Times New Roman'">
+                    <span>Times New Roman</span>
+                  </div>
+                  <div class="dropdown-option" 
+                       (click)="selectFontFamily('Courier New')"
+                       [class.selected]="selectedElement.fontFamily === 'Courier New'">
+                    <span>Courier New</span>
+                  </div>
+                  <div class="dropdown-option" 
+                       (click)="selectFontFamily('Georgia')"
+                       [class.selected]="selectedElement.fontFamily === 'Georgia'">
+                    <span>Georgia</span>
+                  </div>
+                  <div class="dropdown-option" 
+                       (click)="selectFontFamily('Verdana')"
+                       [class.selected]="selectedElement.fontFamily === 'Verdana'">
+                    <span>Verdana</span>
+                  </div>
+                  <div class="dropdown-option" 
+                       (click)="selectFontFamily('Calibri')"
+                       [class.selected]="selectedElement.fontFamily === 'Calibri'">
+                    <span>Calibri</span>
+                  </div>
+                  <div class="dropdown-option" 
+                       (click)="selectFontFamily('Comic Sans MS')"
+                       [class.selected]="selectedElement.fontFamily === 'Comic Sans MS'">
+                    <span>Comic Sans MS</span>
+                  </div>
+                  <div class="dropdown-option" 
+                       (click)="selectFontFamily('Impact')"
+                       [class.selected]="selectedElement.fontFamily === 'Impact'">
+                    <span>Impact</span>
+                  </div>
+                  <div class="dropdown-option" 
+                       (click)="selectFontFamily('Trebuchet MS')"
+                       [class.selected]="selectedElement.fontFamily === 'Trebuchet MS'">
+                    <span>Trebuchet MS</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+          <div class="property-item">
+            <label for="fontSize">Font Size:</label>
+            <input id="fontSize" type="number" [(ngModel)]="selectedElement.fontSize" (input)="updateElement()" min="8" max="72" [disabled]="!viewingMode.canEdit">
+          </div>
+          <div class="property-item">
+            <label for="textColor">Color:</label>
+            <div class="color-input-wrapper">
+              <input id="textColor" type="color" [(ngModel)]="selectedElement.color" (input)="updateElement()" [disabled]="!viewingMode.canEdit">
+              <span class="color-value">{{selectedElement.color}}</span>
+            </div>
+          </div>
+          @if (selectedElement.isPlaceholder) {
+            <div class="property-item">
+              <label for="textPlaceholder">Placeholder:</label>
+              <input id="textPlaceholder" type="text" [(ngModel)]="selectedElement.placeholder" (input)="updateElement()" placeholder="Enter placeholder text..." [disabled]="!viewingMode.canEdit">
+            </div>
+          }
+        </div>
+      }
+      <!-- Textarea Element Properties -->
+      @if (selectedElement.type === 'textarea') {
+        <div class="property-group">
+          <div class="property-item">
+            <label for="textareaContent">Content:</label>
+            <textarea id="textareaContent"
+              [(ngModel)]="selectedElement.content"
+              (input)="updateElement()"
+              rows="3"
+              placeholder="Enter text content..."
+              [disabled]="!viewingMode.canEdit">
+            </textarea>
+          </div>
+          <div class="property-item">
+            <label for="textareaFontSize">Font Size:</label>
+            <input id="textareaFontSize" type="number" [(ngModel)]="selectedElement.fontSize" (input)="updateElement()" min="8" max="72" [disabled]="!viewingMode.canEdit">
+          </div>
+          <div class="property-item">
+            <label for="textareaFontFamily">Font Family:</label>
+            <select id="textareaFontFamily" [(ngModel)]="selectedElement.fontFamily" (change)="updateElement()" [disabled]="!viewingMode.canEdit">
+              <option value="Arial">Arial</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Helvetica">Helvetica</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Verdana">Verdana</option>
+            </select>
+          </div>
+          <div class="property-item">
+            <label for="textareaColor">Text Color:</label>
+            <div class="color-input-wrapper">
+              <input id="textareaColor" type="color" [(ngModel)]="selectedElement.color" (input)="updateElement()" [disabled]="!viewingMode.canEdit">
+              <span class="color-value">{{selectedElement.color}}</span>
+            </div>
+          </div>
+          <div class="property-item">
+            <label for="textareaRows">Rows:</label>
+            <input id="textareaRows" type="number" [(ngModel)]="selectedElement.rows" (input)="updateElement()" min="1" max="20" [disabled]="!viewingMode.canEdit">
+          </div>
+          <div class="property-item">
+            <label for="textareaCols">Columns:</label>
+            <input id="textareaCols" type="number" [(ngModel)]="selectedElement.cols" (input)="updateElement()" min="1" max="50" [disabled]="!viewingMode.canEdit">
+          </div>
+          @if (selectedElement.isPlaceholder) {
+            <div class="property-item">
+              <label for="textareaPlaceholder">Placeholder:</label>
+              <input id="textareaPlaceholder" type="text" [(ngModel)]="selectedElement.placeholder" (input)="updateElement()" placeholder="Enter placeholder text..." [disabled]="!viewingMode.canEdit">
+            </div>
+          }
+        </div>
+      }
+      <!-- Rectangle Element Properties -->
+      @if (selectedElement.type === 'rectangle') {
+        <div class="property-group">
+          <div class="property-item">
+            <label for="fillColor">Fill Color:</label>
+            <div class="color-input-wrapper">
+              <input id="fillColor" type="color" [(ngModel)]="selectedElement.fillColor" (input)="updateElement()" [disabled]="!viewingMode.canEdit">
+              <span class="color-value">{{selectedElement.fillColor}}</span>
+            </div>
+          </div>
+          <div class="property-item">
+            <label for="borderColor">Border Color:</label>
+            <div class="color-input-wrapper">
+              <input id="borderColor" type="color" [(ngModel)]="selectedElement.borderColor" (input)="updateElement()" [disabled]="!viewingMode.canEdit">
+              <span class="color-value">{{selectedElement.borderColor}}</span>
+            </div>
+          </div>
+          <div class="property-item">
+            <label for="borderWidth">Border Width:</label>
+            <input id="borderWidth" type="number" [(ngModel)]="selectedElement.borderWidth" (input)="updateElement()" min="0" max="10" [disabled]="!viewingMode.canEdit">
+          </div>
+        </div>
+      }
+      <!-- Barcode Element Properties -->
+      @if (selectedElement.type === 'barcode') {
+        <div class="property-group">
+          <div class="property-item">
+            <label for="barcodeType">Barcode Type:</label>
+            <div class="modern-dropdown disabled">
+              <div class="dropdown-select disabled">
+                <span class="dropdown-display">Code 128</span>
+                <svg class="dropdown-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+      <!-- Line Element Properties -->
+      @if (selectedElement.type === 'line') {
+        <div class="property-group">
+          <div class="property-item">
+            <label for="lineLength">Length:</label>
+            <input id="lineLength" type="number" [(ngModel)]="selectedElement.lineLength" (input)="updateElement()" min="10" max="1000" [disabled]="!viewingMode.canEdit">
+          </div>
+          <div class="property-item">
+            <label>Orientation:</label>
+            <div class="orientation-buttons">
+              <button class="orientation-btn"
+                [class.active]="(selectedElement.lineAngle || 0) === 0"
+                (click)="setLineOrientation(0)"
+                [disabled]="!viewingMode.canEdit"
+                title="Horizontal">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 12L21 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Horizontal
+              </button>
+              <button class="orientation-btn"
+                [class.active]="(selectedElement.lineAngle || 0) === 90"
+                (click)="setLineOrientation(90)"
+                [disabled]="!viewingMode.canEdit"
+                title="Vertical">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 3L12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Vertical
+              </button>
+            </div>
+          </div>
+          <div class="property-item">
+            <label for="lineColor">Line Color:</label>
+            <div class="color-input-wrapper">
+              <input id="lineColor" type="color" [(ngModel)]="selectedElement.lineColor" (input)="updateElement()" [disabled]="!viewingMode.canEdit">
+              <span class="color-value">{{selectedElement.lineColor}}</span>
+            </div>
+          </div>
+          <div class="property-item">
+            <label for="lineWidth">Line Width:</label>
+            <input id="lineWidth" type="number" [(ngModel)]="selectedElement.lineWidth" (input)="updateElement()" min="1" max="20" [disabled]="!viewingMode.canEdit">
+          </div>
+        </div>
+      }
+      <!-- Common Properties -->
+      <div class="property-group">
+        <div class="property-item">
+          <label for="elementX">X Position:</label>
+          <input id="elementX" type="number" [(ngModel)]="selectedElement.x" (input)="updateElement()" min="0" [disabled]="!viewingMode.canEdit">
+        </div>
+        <div class="property-item">
+          <label for="elementY">Y Position:</label>
+          <input id="elementY" type="number" [(ngModel)]="selectedElement.y" (input)="updateElement()" min="0" [disabled]="!viewingMode.canEdit">
+        </div>
+        <!-- Hide width and height for line elements -->
+        @if (selectedElement.type !== 'line') {
+          <div class="property-item">
+            <label for="elementWidth">Width:</label>
+            <input id="elementWidth" type="number" [(ngModel)]="selectedElement.width" (input)="updateElement()" min="20" [disabled]="!viewingMode.canEdit">
+          </div>
+        }
+        @if (selectedElement.type !== 'line') {
+          <div class="property-item">
+            <label for="elementHeight">Height:</label>
+            <input id="elementHeight" type="number" [(ngModel)]="selectedElement.height" (input)="updateElement()" min="20" [disabled]="!viewingMode.canEdit">
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

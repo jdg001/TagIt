@@ -1,0 +1,152 @@
+<!-- Grouping Details Panel -->
+@if (elementGroups.size > 0) {
+  <div class="grouping-details-panel"
+    [class.minimized]="isMinimized"
+    @slideIn>
+    <!-- Minimized State - Icon Only -->
+    @if (isMinimized) {
+      <div class="minimized-header">
+        <button class="minimized-icon-btn"
+          (click)="toggleMinimize()"
+          aria-label="Expand grouping panel"
+          appTooltip="Expand Panel"
+          tooltipPosition="bottom">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 7V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V7M3 7V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V7M3 7H21M8 9H10M8 13H10M14 9H16M14 13H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="element-count">{{ getTotalGroupedElements() }}</span>
+        </button>
+      </div>
+    }
+    <!-- Expanded State - Full Panel -->
+    @if (!isMinimized) {
+      <div class="expanded-content">
+        <div class="grouping-header">
+          <h4>Groups ({{ elementGroups.size }})</h4>
+          <div class="header-actions">
+            <button class="ungroup-all-btn"
+              (click)="onUngroupAll()"
+              aria-label="Ungroup all elements"
+              appTooltip="Ungroup All"
+              tooltipPosition="bottom">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 7V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V7M3 7V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V7M3 7H21M8 9H10M8 13H10M14 9H16M14 13H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="minimize-btn"
+              (click)="toggleMinimize()"
+              aria-label="Minimize panel"
+              [appTooltip]="isMinimized ? 'Expand' : 'Minimize'"
+              tooltipPosition="bottom">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <!-- Information Banner -->
+        <div class="info-banner">
+          <div class="info-banner-content">
+            <svg class="info-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="info-text">💡 <strong>{{ getTotalGroupedElements() }}</strong> elements in <strong>{{ elementGroups.size }}</strong> group{{ elementGroups.size !== 1 ? 's' : '' }}</span>
+          </div>
+        </div>
+        <div class="grouping-content">
+          <!-- Groups List -->
+          @for (group of groupsList; track trackGroup($index, group)) {
+            <div class="property-group">
+              <div class="group-header">
+                <div class="group-info">
+                  <button class="group-minimize-btn"
+                    (click)="toggleGroupMinimize(group.id)"
+                    [appTooltip]="isGroupMinimized(group.id) ? 'Expand Group' : 'Minimize Group'"
+                    tooltipPosition="bottom">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      @if (!isGroupMinimized(group.id)) {
+                        <path d="M19 9L12 16L5 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      }
+                      @if (isGroupMinimized(group.id)) {
+                        <path d="M9 5L16 12L9 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      }
+                    </svg>
+                  </button>
+                  <div class="group-color-indicator" [style.background-color]="group.color"></div>
+                  <label>{{ group.name }}</label>
+                  <span class="group-count">({{ group.elementIds.size }} elements)</span>
+                </div>
+                <button class="ungroup-group-btn"
+                  (click)="onUngroupGroup(group.id)"
+                  appTooltip="Ungroup All Elements in This Group"
+                  tooltipPosition="bottom">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 7V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V7M3 7V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V7M3 7H21M8 9H10M8 13H10M14 9H16M14 13H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+              <!-- Group Content - Conditionally shown based on minimized state -->
+              @if (!isGroupMinimized(group.id)) {
+                <div class="group-content">
+                  <div class="grouped-elements-list">
+                    @for (element of getElementsInGroup(group); track trackElement($index, element)) {
+                      <div
+                        class="grouped-element-item"
+                        (mouseenter)="onElementHover(element.id)"
+                        (mouseleave)="onElementHoverEnd()">
+                        <div class="element-icon">
+                          @if (element.type === 'text') {
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 4H19C19.5523 4 20 4.44772 20 5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19V5C4 4.44772 4.44772 4 5 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 10H15M12 7V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                          }
+                          @if (element.type === 'rectangle') {
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                          }
+                          @if (element.type === 'barcode') {
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 6H22V18H2V6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 9V15M10 9V15M14 9V15M18 9V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                          }
+                          @if (element.type === 'qr') {
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 7V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V7M3 7V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V7M3 7H21M8 9H10M8 13H10M14 9H16M14 13H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                          }
+                          @if (element.type === 'line') {
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 12H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                          }
+                          @if (element.type === 'image') {
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 19V5C21 3.89543 20.1046 3 19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 10C9.32843 10 10 9.32843 10 8.5C10 7.67157 9.32843 7 8.5 7C7.67157 7 7 7.67157 7 8.5C7 9.32843 7.67157 10 8.5 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 15L16 10L5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                          }
+                        </div>
+                        <div class="element-info">
+                          <span class="element-type">{{ getElementTypeDisplayName(element.type) }}</span>
+                          <div class="element-details">
+                            <span class="element-position">{{ element.x }}, {{ element.y }}</span>
+                            <span class="element-size">{{ element.width }} × {{ element.height }}</span>
+                          </div>
+                        </div>
+                        <button class="ungroup-single-btn"
+                          (click)="onUngroupElement(element.id)"
+                          appTooltip="Ungroup Element"
+                          tooltipPosition="bottom">
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+          <!-- Group Actions -->
+          <div class="group-actions">
+            <button class="action-btn ungroup-all-action" (click)="onUngroupAll()">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 7V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V7M3 7V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V7M3 7H21M8 9H10M8 13H10M14 9H16M14 13H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Ungroup All Elements
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}

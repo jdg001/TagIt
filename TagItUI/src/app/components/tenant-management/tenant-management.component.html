@@ -1,0 +1,360 @@
+<div class="tenant-management-container" [class.dark-theme]="isDarkMode" [class.light-theme]="!isDarkMode">
+
+  <!-- Banner Messages -->
+  @if (banners.length) {
+    <div class="banner-stack">
+      @for (b of banners; track trackBanner($index, b)) {
+        <div class="banner"
+          [class.info]="b.kind==='info'"
+          [class.success]="b.kind==='success'"
+          [class.warning]="b.kind==='warning'"
+          [class.error]="b.kind==='error'"
+          [class.dismissing]="b.dismissing">
+          <span class="banner-icon" aria-hidden="true">
+            <!-- simple icon by kind -->
+            @if (b.kind==='success') {
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            }
+            @if (b.kind==='warning') {
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            }
+            @if (b.kind==='error') {
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M18 6L6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            }
+            @if (b.kind==='info') {
+              <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4m0-4h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            }
+          </span>
+          <span class="banner-text">{{ b.text }}</span>
+          <button class="banner-close" (click)="dismissBanner(b.id)" aria-label="Dismiss">
+            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M18 6L6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-container">
+      <div class="search-box">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <input 
+          type="text" 
+          placeholder="Search tenants by name or domain..." 
+          [(ngModel)]="searchTerm" 
+          (ngModelChange)="loadTenants()"
+          class="search-input">
+      </div>
+      
+      <div class="filter-group">
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- Tenants Table -->
+  <div class="tenants-table-container">
+    <!-- Table Header with Add Button -->
+    <div class="table-header">
+      <div class="table-title">
+        <h3>Tenants</h3>
+        <span class="tenant-count">{{ totalTenants }} tenants</span>
+      </div>
+      <button class="add-tenant-btn" (click)="openCreateTenantModal()">
+        <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Add Tenant
+      </button>
+    </div>
+
+    <div class="table-wrapper" *ngIf="tenants.length > 0">
+      <table class="tenants-table">
+        <thead>
+          <tr>
+            <th class="tenant-column">Tenant</th>
+            <th class="domain-column">Domain</th>
+            <th class="created-column">Created</th>
+            <th class="actions-column">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="tenant-row" *ngFor="let tenant of tenants; trackBy: trackByTenantId">
+            <td class="tenant-cell">
+              <div class="tenant-info">
+                <div class="tenant-avatar">
+                  <div class="avatar-circle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                      <polyline points="9,22 9,12 15,12 15,22"></polyline>
+                    </svg>
+                  </div>
+                </div>
+                <div class="tenant-details">
+                  <div class="tenant-name">{{ tenant.name }}</div>
+                  <div class="tenant-id">ID: {{ tenant.tenantId }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="domain-cell">
+              <span class="domain-badge">{{ tenant.domain }}</span>
+            </td>
+            <td class="created-cell">
+              <span class="created-date">{{ formatDate(tenant.createdAt) }}</span>
+            </td>
+            <td class="actions-cell">
+              <div class="action-buttons">
+                <button 
+                  class="action-btn edit-btn" 
+                  [class.disabled]="tenant.name === 'TagIt'"
+                  [disabled]="tenant.name === 'TagIt'"
+                  (click)="openEditTenantModal(tenant)" 
+                  title="Edit Tenant">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+                
+                <button 
+                  class="action-btn delete-btn" 
+                  [class.disabled]="tenant.name === 'TagIt'"
+                  [disabled]="tenant.name === 'TagIt'"
+                  (click)="onDeleteTenant(tenant)" 
+                  title="Delete Tenant">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3,6 5,6 21,6"></polyline>
+                    <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="tenants.length === 0">
+      <div class="empty-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9,22 9,12 15,12 15,22"></polyline>
+        </svg>
+      </div>
+      <h3>No tenants found</h3>
+      <p>No tenants match your current search criteria. Try adjusting your filters or add a new tenant.</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-section" *ngIf="totalPages > 1">
+    <div class="pagination-info">
+      Showing {{ (currentPage * pageSize) + 1 }} to {{ getEndRange() }} of {{ totalTenants }} tenants
+    </div>
+    <div class="pagination-controls">
+      <button 
+        class="pagination-btn" 
+        [disabled]="currentPage === 1" 
+        (click)="onPageChange(currentPage - 1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15,18 9,12 15,6"></polyline>
+        </svg>
+        Previous
+      </button>
+      
+      <div class="page-numbers">
+        <button 
+          class="page-number" 
+          *ngFor="let page of getVisiblePages()" 
+          [class.active]="page === currentPage" 
+          [class.ellipsis]="page === '...'"
+          (click)="onPageClick(page)"
+          [disabled]="page === '...'">
+          {{ page }}
+        </button>
+      </div>
+      
+      <button 
+        class="pagination-btn" 
+        [disabled]="currentPage === totalPages" 
+        (click)="onPageChange(currentPage + 1)">
+        Next
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9,18 15,12 9,6"></polyline>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Tenant Modal -->
+<div class="modal-overlay" *ngIf="showCreateTenantModal" (click)="closeCreateTenantModal()">
+  <div class="modal-content create-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">Create New Tenant</h2>
+      <button class="modal-close" (click)="closeCreateTenantModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    
+    <form (ngSubmit)="onCreateTenantSubmit()" #createTenantForm="ngForm">
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="newTenantName" class="form-label">Tenant Name</label>
+          <input 
+            type="text" 
+            id="newTenantName" 
+            name="name" 
+            [(ngModel)]="newTenant.name" 
+            required 
+            class="form-input"
+            placeholder="Enter tenant name">
+        </div>
+        
+        <div class="form-group">
+          <label for="newTenantDomain" class="form-label">Domain</label>
+          <input 
+            type="text" 
+            id="newTenantDomain" 
+            name="domain" 
+            [(ngModel)]="newTenant.domain" 
+            required 
+            class="form-input"
+            placeholder="example.com">
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeCreateTenantModal()">
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn-primary" 
+          [disabled]="creating || !newTenant.name || !newTenant.domain"
+          (click)="onCreateTenantSubmit()">
+          <svg *ngIf="creating" class="btn-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 11-6.219-8.56"/>
+          </svg>
+          {{ creating ? 'Creating...' : 'Create Tenant' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Tenant Modal -->
+<div class="modal-overlay" *ngIf="showEditTenantModal" (click)="closeEditTenantModal()">
+  <div class="modal-content edit-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">Edit Tenant</h2>
+      <button class="modal-close" (click)="closeEditTenantModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    
+    <form (ngSubmit)="onEditTenantSubmit()" #editTenantForm="ngForm">
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="editTenantName" class="form-label">Tenant Name</label>
+          <input 
+            type="text" 
+            id="editTenantName" 
+            name="name" 
+            [(ngModel)]="editingTenant!.name" 
+            required 
+            class="form-input">
+        </div>
+        
+        <div class="form-group">
+          <label for="editTenantDomain" class="form-label">Domain</label>
+          <input 
+            type="text" 
+            id="editTenantDomain" 
+            name="domain" 
+            [(ngModel)]="editingTenant!.domain" 
+            required 
+            class="form-input">
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeEditTenantModal()">
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn-primary" 
+          [disabled]="!editTenantForm.valid || updating">
+          <svg *ngIf="updating" class="btn-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 11-6.219-8.56"/>
+          </svg>
+          {{ updating ? 'Updating...' : 'Save Changes' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirmation Dialog -->
+<div class="modern-dialog-overlay" *ngIf="showDeleteConfirmDialog" (click)="closeDeleteConfirmDialog()">
+  <div class="modern-dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h3>Delete Tenant</h3>
+      <button class="close-button" (click)="closeDeleteConfirmDialog()">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="dialog-content">
+      <div class="warning-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+      </div>
+      <p class="dialog-message">
+        Are you sure you want to delete tenant <strong>"{{ tenantToDelete?.name }}"</strong>?
+      </p>
+      <p class="dialog-warning">
+        This action cannot be undone. The tenant will be permanently removed from the system.
+      </p>
+    </div>
+    
+    <div class="dialog-actions">
+      <button 
+        class="cancel-btn" 
+        (click)="closeDeleteConfirmDialog()"
+        type="button">
+        Cancel
+      </button>
+      <button 
+        class="btn btn-danger" 
+        (click)="confirmDeleteTenant()"
+        type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3,6 5,6 21,6"></polyline>
+          <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+        Delete Tenant
+      </button>
+    </div>
+  </div>
+</div>

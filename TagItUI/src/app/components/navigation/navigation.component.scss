@@ -1,0 +1,1119 @@
+/* CSS Custom Properties for Theme Support */
+:host {
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+  --secondary-color: #6b7280;
+  --success-color: #10b981;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --accent-color: #8b5cf6;
+  
+  /* Light theme variables */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border-color: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --grid-color: #e2e8f0;
+  --ruler-bg: #f8fafc;
+  --ruler-text: #64748b;
+  --tooltip-bg: #1e293b;
+  --tooltip-text: #f8fafc;
+  --tooltip-border: #374151;
+  
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Sidebar Styles */
+.sidebar {
+  position: fixed;
+  top: 61px; /* Header height + border */
+  left: 0;
+  bottom: 0;
+  width: 60px;
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: visible; /* Changed from hidden to visible to show toggle button */
+  z-index: 50;
+  box-shadow: var(--shadow-md);
+}
+
+.sidebar.expanded {
+  width: 280px;
+  box-shadow: var(--shadow-lg);
+}
+
+.sidebar-content {
+  padding: 16px 8px;
+  height: 100%;
+  overflow-y: auto;
+  transition: padding 0.3s ease;
+  box-shadow: 4px 3px 20px rgba(4, 4, 4, 0.1);
+  /* Hide scrollbar for Firefox */
+  scrollbar-width: none;
+}
+
+.sidebar.expanded .sidebar-content {
+  padding: 16px;
+}
+
+/* Arrow Slider Button */
+.sidebar-toggle {
+  position: absolute;
+  top: 50%;
+  right: -20px; /* Increased from -15px to extend further */
+  transform: translateY(-50%);
+  width: 32px; /* Slightly larger for better visibility */
+  height: 32px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-md);
+  z-index: 100; /* Higher z-index to ensure it's above canvas */
+}
+
+.sidebar-toggle:hover {
+  background-color: var(--bg-secondary);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.sidebar-toggle svg {
+  width: 16px;
+  height: 16px;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+
+.sidebar-toggle:hover svg {
+  color: var(--primary-color);
+}
+
+.sidebar-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.expanded .sidebar-title {
+  opacity: 1;
+}
+
+/* Tool Palette */
+.tool-palette {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tool-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--bg-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  min-height: 36px;
+}
+
+.sidebar.expanded .tool-item {
+  justify-content: flex-start;
+}
+
+.tool-item:hover {
+  border-color: var(--primary-color);
+  background-color: var(--bg-tertiary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.tool-item[draggable="true"] {
+  cursor: grab;
+}
+
+.tool-item[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.tool-item[draggable="true"]:hover {
+  opacity: 0.8;
+}
+
+.tool-item.active {
+  border-color: var(--primary-color);
+  background-color: rgb(59 130 246 / 0.1);
+  color: var(--primary-color);
+}
+
+.tool-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Expand Icon for Template and Placeholder Tools */
+.expand-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: all 0.3s ease;
+  margin-left: auto;
+}
+
+.sidebar.expanded .expand-icon {
+  opacity: 1;
+}
+
+/* Template Tool Specific Styles */
+.template-tool {
+  position: relative;
+  min-height: 36px; /* Ensure same height as other tools */
+}
+
+/* Always show expand icon for template tool */
+.template-tool .expand-icon {
+  opacity: 1 !important; /* Always visible for this tool */
+  transform: rotate(0deg);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.template-tool.active .expand-icon {
+  transform: rotate(90deg);
+}
+
+/* Ensure template tool doesn't grow larger than other tools */
+.template-tool .tool-name {
+  flex: 1;
+  min-width: 0; /* Allow text to truncate if needed */
+}
+
+/* Placeholder Tool Specific Styles */
+.placeholder-tool {
+  position: relative;
+  min-height: 36px; /* Ensure same height as other tools */
+}
+
+/* Always show expand icon for placeholder tool */
+.placeholder-tool .expand-icon {
+  opacity: 1 !important; /* Always visible for this tool */
+  transform: rotate(0deg);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.placeholder-tool.active .expand-icon {
+  transform: rotate(90deg);
+}
+
+/* Ensure placeholder tool doesn't grow larger than other tools */
+.placeholder-tool .tool-name {
+  flex: 1;
+  min-width: 0; /* Allow text to truncate if needed */
+}
+
+/* Grouping Tool Specific Styles - Purple initially, Green when active */
+.grouping-tool {
+  position: relative;
+  min-height: 36px; /* Ensure same height as other tools */
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  border: none !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3) !important;
+  overflow: hidden;
+}
+
+.grouping-tool::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.grouping-tool:hover::before {
+  left: 100%;
+}
+
+.grouping-tool:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4) !important;
+}
+
+.grouping-tool.active {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.5) !important;
+}
+
+.grouping-tool.active:hover {
+  background: linear-gradient(135deg, var(--primary-hover) 0%, #1e40af 100%) !important;
+}
+
+/* Smart Layout Tool Specific Styles - Purple initially, Blue when active */
+.smart-layout-tool {
+  position: relative;
+  min-height: 36px; /* Ensure same height as other tools */
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  border: none !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3) !important;
+  overflow: hidden;
+}
+
+.smart-layout-tool::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.smart-layout-tool:hover::before {
+  left: 100%;
+}
+
+.smart-layout-tool:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4) !important;
+}
+
+.smart-layout-tool.active {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.5) !important;
+}
+
+.smart-layout-tool.active:hover {
+  background: linear-gradient(135deg, var(--primary-hover) 0%, #1e40af 100%) !important;
+}
+
+/* Live Preview Tool Specific Styles - Purple initially, Blue when active */
+.live-preview-tool {
+  position: relative;
+  min-height: 36px; /* Ensure same height as other tools */
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  border: none !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3) !important;
+  overflow: hidden;
+}
+
+.live-preview-tool::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.live-preview-tool:hover::before {
+  left: 100%;
+}
+
+.live-preview-tool:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4) !important;
+}
+
+.live-preview-tool.active {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.5) !important;
+}
+
+.live-preview-tool.active:hover {
+  background: linear-gradient(135deg, var(--primary-hover) 0%, #1e40af 100%) !important;
+}
+
+
+
+
+
+/* Modern Tooltips for Tool Items */
+.tool-item[title] {
+  position: relative;
+}
+
+.tool-item[title]:hover::after {
+  content: attr(title);
+  position: fixed;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%) translateY(8px);
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25), 
+              0 2px 8px rgba(0, 0, 0, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 99999;
+  pointer-events: none;
+  animation: tooltipSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+  backdrop-filter: blur(8px);
+  letter-spacing: 0.2px;
+}
+
+.tool-item[title]:hover::before {
+  content: '';
+  position: fixed;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%) translateY(2px);
+  border: 6px solid transparent;
+  border-bottom-color: #1e293b;
+  z-index: 100000;
+  pointer-events: none;
+  animation: tooltipSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+}
+
+@keyframes tooltipSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(8px) scale(1);
+  }
+}
+
+.tool-name {
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.expanded .tool-name {
+  opacity: 1;
+}
+
+/* Sub-pane Styles */
+.sub-pane {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  width: 200px;
+  height: calc(100% - 20px); /* Crop from bottom */
+  margin-bottom: 20px; /* Add bottom margin */
+  background: var(--bg-primary);
+  border-left: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  z-index: 10;
+  overflow: visible; /* Allow tooltips to show outside */
+  border-radius: 0 8px 8px 0; /* Rounded right corners */
+}
+
+.sub-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  border-radius: 0 8px 0 0; /* Rounded top-right corner */
+  position: relative;
+}
+
+.sub-pane-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%);
+  border-radius: 0 8px 0 0;
+}
+
+.sub-pane-header h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sub-pane-header h4::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.close-sub-pane {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.close-sub-pane:hover {
+  background: var(--error-color);
+  color: white;
+  border-color: var(--error-color);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.close-sub-pane:active {
+  transform: scale(0.95);
+}
+
+.close-sub-pane svg {
+  width: 12px;
+  height: 12px;
+}
+
+.sub-pane-content {
+  padding: 16px;
+  height: calc(100% - 48px);
+  overflow-y: auto;
+  overflow-x: visible; /* Allow tooltips to show outside */
+}
+
+/* Icon Grid */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns */
+  gap: 12px;
+}
+
+.icon-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  cursor: grab;
+  transition: all 0.2s ease;
+  margin: 0 auto;
+}
+
+.icon-item:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+}
+
+.icon-wrapper { /* Replaced .component-icon */
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.icon-wrapper svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+.icon-wrapper.company {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.icon-wrapper.product {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.icon-wrapper.price {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.icon-wrapper.barcode {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+.icon-wrapper.date {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.icon-wrapper.sku {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+
+/* Modern Tooltip Styles for Icons */
+.icon-item[title] {
+  position: relative;
+}
+
+.icon-item[title]:hover::after {
+  content: attr(title);
+  position: fixed;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%) translateY(8px);
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 
+              0 4px 16px rgba(0, 0, 0, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 99999;
+  pointer-events: none;
+  animation: modernTooltipFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+  backdrop-filter: blur(10px);
+  letter-spacing: 0.3px;
+}
+
+.icon-item[title]:hover::before {
+  content: '';
+  position: fixed;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%) translateY(2px);
+  border: 8px solid transparent;
+  border-bottom-color: #1e293b;
+  z-index: 100000;
+  pointer-events: none;
+  animation: modernTooltipFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+}
+
+@keyframes modernTooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(8px) scale(1);
+  }
+}
+
+/* Enhanced tooltip for different icon types */
+.icon-item[title]:hover::after {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+
+.icon-wrapper.company:hover ~ .icon-item[title]:hover::after,
+.icon-item[title]:hover .icon-wrapper.company ~ ::after {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.icon-wrapper.product:hover ~ .icon-item[title]:hover::after,
+.icon-item[title]:hover .icon-wrapper.product ~ ::after {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.icon-wrapper.price:hover ~ .icon-item[title]:hover::after,
+.icon-item[title]:hover .icon-wrapper.price ~ ::after {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.icon-wrapper.barcode:hover ~ .icon-item[title]:hover::after,
+.icon-item[title]:hover .icon-wrapper.barcode ~ ::after {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+}
+
+.icon-wrapper.date:hover ~ .icon-item[title]:hover::after,
+.icon-item[title]:hover .icon-wrapper.date ~ ::after {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.icon-wrapper.sku:hover ~ .icon-item[title]:hover::after,
+.icon-item[title]:hover .icon-wrapper.sku ~ ::after {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+
+/* Scrollbar Styling - Hidden for navbar */
+.sidebar-content::-webkit-scrollbar {
+  display: none;
+}
+
+.sub-pane-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sub-pane-content::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.sub-pane-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.sub-pane-content::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 50px;
+    top: 53px; /* Adjusted for smaller header */
+  }
+  
+  .sidebar.expanded {
+    width: 240px;
+  }
+
+  .sub-pane {
+    width: 180px; /* Adjusted for smaller screens */
+  }
+  
+  .icon-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile */
+    gap: 8px;
+  }
+  
+  .icon-item {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .icon-wrapper {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .icon-wrapper svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .sidebar-toggle {
+    right: -16px; /* Adjusted for mobile */
+    width: 28px; /* Slightly larger for mobile touch */
+    height: 28px;
+  }
+
+  .sidebar-toggle svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+/* Dark theme variables */
+:host-context(.dark-theme),
+.dark-theme,
+.sidebar.dark-theme {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: #374151;
+  --border-hover: #4b5563;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+  --grid-color: #374151;
+  --ruler-bg: #1e293b;
+  --ruler-text: #9ca3af;
+  --tooltip-bg: #f8fafc;
+  --tooltip-text: #1e293b;
+  --tooltip-border: #e2e8f0;
+}
+
+/* Dark mode adjustments */
+:host-context(.dark-theme),
+.dark-theme,
+.sidebar.dark-theme {
+  .sidebar {
+    background-color: var(--bg-secondary);
+    border-right-color: var(--border-color);
+    box-shadow: var(--shadow-md);
+  }
+
+  .sidebar-content {
+    background-color: var(--bg-secondary);
+  }
+
+  .sidebar-title {
+    color: var(--text-primary);
+  }
+
+  .tool-item {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
+
+  .tool-item:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--primary-color);
+  }
+
+  .tool-item.active {
+    background-color: rgb(59 130 246 / 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  .tool-icon {
+    color: var(--text-primary);
+  }
+
+  .tool-name {
+    color: var(--text-primary);
+  }
+
+  .expand-icon {
+    color: var(--text-primary);
+  }
+
+  .sub-pane {
+    background: var(--bg-primary);
+    border-left-color: var(--border-color);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sub-pane-header {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border-bottom-color: var(--border-color);
+  }
+
+  .sub-pane-header::before {
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+  }
+
+  .sub-pane-header h4 {
+    color: var(--text-primary);
+  }
+
+  .sub-pane-header h4::before {
+    background: #3b82f6;
+  }
+
+  .close-sub-pane {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+  }
+
+  .close-sub-pane:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+  }
+
+  .icon-item {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+  }
+
+  .icon-item:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--primary-color);
+  }
+
+  .icon-wrapper svg {
+    color: var(--text-primary);
+  }
+
+  .icon-wrapper.company svg {
+    color: #3b82f6;
+  }
+
+  .icon-wrapper.product svg {
+    color: #10b981;
+  }
+
+  .icon-wrapper.price svg {
+    color: #f59e0b;
+  }
+
+  .icon-wrapper.barcode svg {
+    color: #8b5cf6;
+  }
+
+  .icon-wrapper.date svg {
+    color: #ef4444;
+  }
+
+  .icon-wrapper.sku svg {
+    color: #06b6d4;
+  }
+
+  /* Dark mode grouping tool styles - Purple initially, Green when active */
+  .grouping-tool {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4) !important;
+  }
+
+  .grouping-tool:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5) !important;
+  }
+
+  .grouping-tool.active {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
+    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.6) !important;
+  }
+
+  .grouping-tool.active:hover {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  }
+
+  /* Dark mode smart layout tool styles - Purple initially, Blue when active */
+  .smart-layout-tool {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4) !important;
+  }
+
+  .smart-layout-tool:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5) !important;
+  }
+
+  .smart-layout-tool.active {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
+    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.6) !important;
+  }
+
+  .smart-layout-tool.active:hover {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  }
+
+  /* Dark mode live preview tool styles - Purple initially, Blue when active */
+  .live-preview-tool {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4) !important;
+  }
+
+  .live-preview-tool:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5) !important;
+  }
+
+  .live-preview-tool.active {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
+    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.6) !important;
+  }
+
+  .live-preview-tool.active:hover {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  }
+
+
+
+
+  /* Dark mode tooltip styles */
+  .icon-item[title]:hover::after {
+    background: linear-gradient(135deg, var(--tooltip-bg) 0%, #f1f5f9 100%);
+    color: var(--tooltip-text);
+    border: 1px solid var(--tooltip-border);
+  }
+
+  .icon-item[title]:hover::before {
+    border-bottom-color: var(--tooltip-bg);
+  }
+
+  /* Dark mode scrollbar */
+  .sidebar-content::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sidebar-content::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+  }
+
+  .sidebar-content::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+  }
+
+  .sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: var(--border-hover);
+  }
+}
+
+button:hover {
+  cursor: pointer !important;;   
+}
+
+button:disabled {
+  cursor: not-allowed !important;;   
+}
+
+
+.tool-item,
+.draggable {
+  cursor: grab !important;
+  cursor: -webkit-grab !important;
+}
+
+
+.dragging-hand,
+.dragging-hand * {
+  cursor: grabbing !important;
+  cursor: -webkit-grabbing !important;
+}
+
+/* Tunable sizes for the collapsed rail */
+.sidebar {
+  --rail: 60px;      /* collapsed rail width */
+  --btn: 44px;       /* square button size (was 44px) */
+  --icon: 24px;      /* icon size (was 22px) */
+  --radius: 10px;
+  --btn-height: 46px;
+}
+
+/* true square button, centered content */
+.tool-item {
+  width: var(--btn);
+  height: var(--btn-height);
+  margin: 2px auto;
+  padding: 0;
+  border-radius: var(--radius);
+  display: grid;
+  place-items: center;
+  line-height: 0;
+  overflow: hidden;
+
+  /* light, 3D-ish surface */
+  background: linear-gradient(#ffffff, #f2f4f8);
+  border: 1px solid rgba(16, 24, 40, 0.08);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 
+    0 1px 2px rgb(16 24 40 / 58%), 
+    0 8px 16px rgba(16, 24, 40, 0.22);
+
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+/* icon size */
+.tool-item svg,
+.tool-icon {
+  width: var(--icon);
+  height: var(--icon);
+  display: block;
+}
+
+/* Keep labels/chevrons hidden when collapsed so nothing shrinks the icon */
+.tool-name { display: none; }
+.expand-icon { display: none; }
+
+/* Expanded rail (unchanged behavior, just keep icons a touch smaller than the row) */
+.sidebar.expanded { width: 260px; }
+.sidebar.expanded .tool-item {
+  width: 90%;
+  height: 40px;
+  margin: 6px 0;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1;
+}
+.sidebar.expanded .tool-icon { width: 22px; height: 22px; } /* good size in rows */
+.sidebar.expanded .tool-name { display: inline; }
+.sidebar.expanded .expand-icon { display: inline; }
+
+/* dark theme tweak (keeps the 3D but darker) */
+:host-context(.dark-theme) .tool-item {
+  background: linear-gradient(#1d2430, #0f1623);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 1px 2px rgba(0, 0, 0, 0.25),
+    0 8px 16px rgba(0, 0, 0, 0.28);
+}
+:host-context(.dark-theme) .tool-item:hover {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 2px 4px rgba(0, 0, 0, 0.35),
+    0 12px 24px rgba(0, 0, 0, 0.40);
+}
+
+
+.tool-item:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 2px 4px rgba(16, 24, 40, 0.10),
+    0 10px 20px rgba(16, 24, 40, 0.10);
+}
+
+.tool-item:active {
+  transform: translateY(0);
+  box-shadow:
+    0 0 0 rgba(255, 255, 255, 0) inset,
+    0 1px 2px rgba(16, 24, 40, 0.12);
+}
+
+/* thin separator between tool groups */
+.tool-divider {
+  height: 2px;                /* was 1px */
+  margin: 10px 6px;
+  background: rgba(16, 24, 40, 0.18);  /* slightly stronger */
+  border-radius: 2px;         /* was 1px */
+  align-self: stretch;
+}
+
+.sidebar.dark-theme .tool-divider {
+  background: rgba(255, 255, 255, 0.22); /* match thickness in dark mode */
+}

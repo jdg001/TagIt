@@ -1,0 +1,10 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/TagItBackend/TagIt.Api/bin/Debug/net9.0
+/TagItBackend/TagIt.Api/obj
+/TagItBackend/.vs/TagItBackend
+/TagItBackend/.vs/ProjectEvaluation
+*.mkv
+*.txt

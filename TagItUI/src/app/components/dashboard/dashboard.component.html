@@ -1,0 +1,772 @@
+<!-- TagIt Workspace Dashboard -->
+<div class="dashboard-container" [class.dark-theme]="isDarkMode" [class.light-theme]="!isDarkMode">
+  
+  <!-- Toast/Banner stack -->
+  @if (banners.length) {
+    <div class="banner-stack">
+      @for (b of banners; track trackBanner($index, b)) {
+        <div class="banner"
+          [class.info]="b.kind==='info'"
+          [class.success]="b.kind==='success'"
+          [class.warning]="b.kind==='warning'"
+          [class.error]="b.kind==='error'"
+          [class.dismissing]="b.dismissing">
+          <span class="banner-icon" aria-hidden="true">
+            <!-- simple icon by kind -->
+            @if (b.kind==='success') {
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            }
+            @if (b.kind==='warning') {
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            }
+            @if (b.kind==='error') {
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M18 6L6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            }
+            @if (b.kind==='info') {
+              <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4m0-4h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            }
+          </span>
+          <span class="banner-text">{{ b.text }}</span>
+          <button class="banner-close" (click)="dismissBanner(b.id)" aria-label="Dismiss">
+            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M18 6L6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      }
+    </div>
+  }
+  
+  <!-- Header Section -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="brand">
+          <img class="logo" src="assets/tagit-logo.svg" alt="TagIt Logo" width="48" height="48">
+          <div class="brand-text">
+            <span class="brand-name">tag<span class="brand-accent">IT</span></span>
+            <span class="brand-tagline">Label Designer</span>
+          </div>
+        </div>
+        <!-- User Role Badges -->
+        <div class="role-badges-container">
+          <div class="role-badge-icon" 
+               *ngFor="let role of userRoles" 
+               [class]="'role-' + role.toLowerCase()"
+               [attr.data-role]="role">
+            <svg class="role-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Admin: Crown icon -->
+              <path *ngIf="role === 'Admin'" d="M2 19L4 12L8 14L12 8L16 14L20 12L22 19H2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path *ngIf="role === 'Admin'" d="M6 19H18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              
+              <!-- Designer: Palette/Design icon -->
+              <path *ngIf="role === 'Designer'" d="M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22S22 17.5 22 12S17.5 2 12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path *ngIf="role === 'Designer'" d="M8.5 8.5C8.5 8.5 10 7 12 7S15.5 8.5 15.5 8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path *ngIf="role === 'Designer'" d="M8.5 15.5C8.5 15.5 10 17 12 17S15.5 15.5 15.5 15.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle *ngIf="role === 'Designer'" cx="12" cy="12" r="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              
+              <!-- Reviewer: Eye icon -->
+              <path *ngIf="role === 'Reviewer'" d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle *ngIf="role === 'Reviewer'" cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="role-label">{{ role }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <p class="dashboard-subtitle">
+          Welcome back, {{ currentUser?.username || 'User' }}!
+        </p>
+        
+        <button 
+          class="add-new-button" 
+          (click)="onCreateTemplate()"
+          *ngIf="hasRole('Designer')"
+          appTooltip="New Template"
+          tooltipPosition="bottom">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        
+        <button class="logout-button" 
+                (click)="onLogout()" 
+                appTooltip="Logout"
+                tooltipPosition="bottom">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        
+        <button class="theme-toggle" (click)="toggleTheme()" [title]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+          <svg *ngIf="isDarkMode" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <svg *ngIf="!isDarkMode" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Navigation Tabs -->
+  <div class="dashboard-tabs">
+    <div class="tab-nav">
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'public'"
+        (click)="onTabChange('public')">
+        Public Library
+        <span class="tab-count">{{ publicLibrary.length }}</span>
+      </button>
+      
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'local'"
+        (click)="onTabChange('local')"
+        *ngIf="hasRole('Designer')">
+        Local Library
+        <span class="tab-count">{{ localLibrary.length }}</span>
+      </button>
+      
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'my-submitted'"
+        (click)="onTabChange('my-submitted')"
+        *ngIf="hasRole('Designer')">
+        My Submissions
+        <span class="tab-count">{{ mySubmittedLibrary.length }}</span>
+      </button>
+      
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'all-submissions'"
+        (click)="onTabChange('all-submissions')"
+        *ngIf="hasRole('Reviewer')">
+        All Submissions
+        <span class="tab-count">{{ allSubmissionsLibrary.length }}</span>
+      </button>
+      
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'assigned'"
+        (click)="onTabChange('assigned')"
+        *ngIf="hasRole('Reviewer')">
+        Assigned to Me
+        <span class="tab-count">{{ assignedLibrary.length }}</span>
+      </button>
+      
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'tenants'"
+        (click)="onTabChange('tenants')"
+        *ngIf="tagitAdmin">
+        Tenants
+        <span class="tab-count">{{ tenantsCount }}</span>
+      </button>
+      
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'users'"
+        (click)="onTabChange('users')"
+        *ngIf="hasRole('Admin')">
+        Users
+        <span class="tab-count">{{ usersCount }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Filters -->
+  <div class="dashboard-filters" *ngIf="activeTab !== 'users' && activeTab !== 'tenants'">
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Search templates..." 
+        [(ngModel)]="searchQuery"
+        class="search-input">
+    </div>
+    
+    <div class="filter-group">
+      <!-- Status Filter Dropdown -->
+      <div class="modern-dropdown" #statusDropdown>
+        <div class="dropdown-select" 
+             (click)="toggleStatusDropdown()"
+             [class.active]="showStatusDropdown">
+          <span class="dropdown-display">{{ getStatusFilterDisplayName() }}</span>
+          <svg class="dropdown-arrow" 
+               [class.rotated]="showStatusDropdown"
+               viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        
+        @if (showStatusDropdown) {
+          <div class="dropdown-menu">
+            <div class="dropdown-option" 
+                 (click)="selectStatusFilter('all')"
+                 [class.selected]="statusFilter === 'all'">
+              <span>All Status</span>
+            </div>
+            <div class="dropdown-option" 
+                 (click)="selectStatusFilter('Published')"
+                 [class.selected]="statusFilter === 'Published'">
+              <span>Published</span>
+            </div>
+            <div class="dropdown-option" 
+                 (click)="selectStatusFilter('Draft')"
+                 [class.selected]="statusFilter === 'Draft'">
+              <span>Draft</span>
+            </div>
+            <div class="dropdown-option" 
+                 (click)="selectStatusFilter('UnderReview')"
+                 [class.selected]="statusFilter === 'UnderReview'">
+              <span>Under Review</span>
+            </div>
+            <div class="dropdown-option" 
+                 (click)="selectStatusFilter('Assigned')"
+                 [class.selected]="statusFilter === 'Assigned'">
+              <span>Assigned</span>
+            </div>
+            <div class="dropdown-option" 
+                 (click)="selectStatusFilter('Rejected')"
+                 [class.selected]="statusFilter === 'Rejected'">
+              <span>Rejected</span>
+            </div>
+            <div class="dropdown-option" 
+                 (click)="selectStatusFilter('DeleteUnderReview')"
+                 [class.selected]="statusFilter === 'DeleteUnderReview'">
+              <span>Delete Under Review</span>
+            </div>
+            <div class="dropdown-option" 
+                 (click)="selectStatusFilter('DeleteAssigned')"
+                 [class.selected]="statusFilter === 'DeleteAssigned'">
+              <span>Delete Assigned</span>
+            </div>
+          </div>
+        }
+      </div>
+      
+      <!-- Version Filter Dropdown -->
+      <div class="modern-dropdown" #versionDropdown>
+        <div class="dropdown-select" 
+             (click)="toggleVersionDropdown()"
+             [class.active]="showVersionDropdown">
+          <span class="dropdown-display">{{ getVersionFilterDisplayName() }}</span>
+          <svg class="dropdown-arrow" 
+               [class.rotated]="showVersionDropdown"
+               viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        
+        @if (showVersionDropdown) {
+          <div class="dropdown-menu">
+            <div class="dropdown-option" 
+                 (click)="selectVersionFilter('latest')"
+                 [class.selected]="versionFilter === 'latest'">
+              <span>Latest Version</span>
+            </div>
+            <div class="dropdown-option" 
+                 (click)="selectVersionFilter('all')"
+                 [class.selected]="versionFilter === 'all'">
+              <span>All Versions</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Area -->
+  <div class="dashboard-content">
+    
+    <!-- Templates Grid -->
+    <div class="templates-grid" *ngIf="activeTab !== 'users' && activeTab !== 'tenants'">
+        <div 
+        class="template-card" 
+        *ngFor="let template of getFilteredTemplates()"
+        [class.has-conflicts]="template.hasConflicts"
+        [class.active-session]="template.activeEditSessions > 0"
+        [class.status-draft]="template.designState === 'Draft'"
+        [class.status-under-review]="template.designState === 'UnderReview'"
+        [class.status-assigned]="template.designState === 'Assigned'"
+        [class.status-approved]="template.designState === 'Approved'"
+        [class.status-published]="template.designState === 'Published'"
+        [class.status-rejected]="template.designState === 'Rejected'"
+        [class.status-deleteunderreview]="template.designState === 'DeleteUnderReview'"
+        [class.status-deleteassigned]="template.designState === 'DeleteAssigned'">
+        
+        <!-- Template Header -->
+        <div class="template-header">
+          <div class="template-info">
+            <h6 class="template-name">{{ template.name }}</h6>
+          </div>
+          
+          <div class="template-header-actions">
+            <!-- Assign to me icon -->
+            <button 
+              class="assign-to-me-btn" 
+              (click)="onAssignToMe(template)"
+              *ngIf="canAssignToMe(template)"
+              appTooltip="Assign to me"
+              tooltipPosition="bottom"
+              [style.background-color]="'#F59E0B66'">
+              <i class="icon-user-plus"></i>
+            </button>
+            
+            <!-- Remove from assigned icon -->
+            <button 
+              class="remove-from-assigned-btn" 
+              (click)="onRemoveFromAssigned(template)"
+              *ngIf="canRemoveFromAssigned(template)"
+              appTooltip="Remove from assigned"
+              tooltipPosition="bottom"
+              [style.background-color]="'#6366f166'">
+              <i class="icon-minus"></i>
+            </button>
+            
+            <!-- Assign delete request to me icon -->
+            <button 
+              class="assign-to-me-btn"
+              [class]="'status-' + (template.designState || 'draft').toLowerCase()"
+              (click)="onAssignDeleteRequestToMe(template)"
+              *ngIf="canAssignDeleteRequestToMe(template)"
+              appTooltip="Assign delete request to me"
+              tooltipPosition="bottom"
+              [style.background-color]="'#F6727299'">
+              <i class="icon-user-plus"></i>
+            </button>
+          </div>
+        </div>
+        
+         <!-- Template Preview -->
+         <div class="preview-thumbnail">
+             <app-template-thumbnail 
+               [templateId]="template.templateId"
+               [templateName]="template.name"
+               [width]="200"
+               [height]="120"
+               [lazyLoad]="false"
+               [showLoading]="true">
+             </app-template-thumbnail>
+            </div>
+        
+        <!-- Conflict Indicators -->
+        <div class="conflict-indicators" *ngIf="template.hasConflicts || template.activeEditSessions > 0">
+          <div class="conflict-badge" *ngIf="template.hasConflicts">
+            <i class="icon-alert-triangle"></i>
+            Conflicts
+          </div>
+          
+          <div class="session-badge" *ngIf="template.activeEditSessions > 0">
+            <i class="icon-users"></i>
+            {{ template.activeEditSessions }} Active
+          </div>
+        </div>
+        
+         <!-- Template Actions -->
+         <div class="template-actions">
+           <!-- Collaboration Button (Public Library Only) -->
+           <button 
+             class="action-icon-btn collaborate-btn" 
+             (click)="onCollaborateTemplate(template)"
+             *ngIf="activeTab === 'public'"
+             appTooltip="Collaborate on this template" 
+             tooltipPosition="bottom">
+             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+               <path d="M17 21V19C17 17.134 13.866 14 10 14C6.134 14 3 17.134 3 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+               <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+               <path d="M23 21V19C23 17.136 21.864 16 20 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+               <path d="M16 3.13C16.86 3.39 17.61 3.89 18.13 4.58" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+             </svg>
+           </button>
+
+           <!-- View Button -->
+           <button 
+             class="action-icon-btn" 
+             [class]="'action-icon-btn status-' + (template.designState || 'draft').toLowerCase() + '-btn'"
+             (click)="onViewTemplate(template)"
+             appTooltip="View" 
+             tooltipPosition="bottom">
+             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+               <path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+               <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+             </svg>
+           </button>
+          
+          <!-- Submit Button -->
+          <button 
+            class="action-icon-btn" 
+            [class]="'action-icon-btn status-' + (template.designState || 'draft').toLowerCase() + '-btn'"
+            (click)="onSubmitForReview(template)"
+            *ngIf="canEdit(template) && template.designState === 'Draft'"
+            appTooltip="Submit" 
+            tooltipPosition="bottom">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          
+          <!-- Approve Button -->
+          <button 
+            class="action-icon-btn" 
+            [class]="'action-icon-btn status-' + (template.designState || 'draft').toLowerCase() + '-btn'"
+            (click)="onApproveTemplate(template)"
+            *ngIf="canReview(template) && activeTab === 'assigned' && (template.designState === 'UnderReview' || template.designState === 'Assigned' || template.designState === 'DeleteUnderReview' || template.designState === 'DeleteAssigned' || template.designState === 'DeleteApproved')"
+            appTooltip="Approve" 
+            tooltipPosition="bottom">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          
+          <!-- Reject Button -->
+          <button 
+            class="action-icon-btn" 
+            [class]="'action-icon-btn status-' + (template.designState || 'draft').toLowerCase() + '-btn'"
+            (click)="onRejectTemplate(template)"
+            *ngIf="canReview(template) && activeTab === 'assigned' && (template.designState === 'UnderReview' || template.designState === 'Assigned' || template.designState === 'DeleteUnderReview' || template.designState === 'DeleteAssigned' || template.designState === 'DeleteApproved')"
+            appTooltip="Reject" 
+            tooltipPosition="bottom">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <!-- Publish Button (shows after approval in assigned tab) -->
+          <button 
+            class="action-icon-btn" 
+            [class]="'action-icon-btn status-' + (template.designState || 'draft').toLowerCase() + '-btn'"
+            (click)="onPublishTemplate(template)"
+            *ngIf="canReview(template) && activeTab === 'assigned' && template.designState === 'Approved'"
+            appTooltip="Publish to Public Library" 
+            tooltipPosition="bottom">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          
+          <!-- Delete Button -->
+          <button 
+            class="action-icon-btn" 
+            [class]="'action-icon-btn status-' + (template.designState || 'draft').toLowerCase() + '-btn'"
+            (click)="onDeleteTemplate(template)"
+            *ngIf="canDelete(template)"
+            appTooltip="Delete" 
+            tooltipPosition="bottom">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tenant Management Component (TagitAdmin only) -->
+    <div *ngIf="activeTab === 'tenants' && tagitAdmin">
+      <app-tenant-management (tenantsCountChanged)="onTenantsCountChanged($event)"></app-tenant-management>
+    </div>
+    
+    <!-- User Management Component (Admin only) -->
+    <div *ngIf="activeTab === 'users'">
+      <app-user-management 
+        [tagitAdmin]="tagitAdmin"
+        (usersCountChanged)="onUsersCountChanged($event)">
+      </app-user-management>
+    </div>
+    
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="getFilteredTemplates().length === 0 && activeTab !== 'users' && activeTab !== 'tenants'">
+      <div class="empty-icon">
+        <i class="icon-folder-open"></i>
+      </div>
+      <h3>No templates found</h3>
+      <p *ngIf="hasRole('Designer')">Try adjusting your search or filters, or create a new template.</p>
+      <p *ngIf="!hasRole('Designer')">Try adjusting your search or filters.</p>
+      <button 
+        class="btn btn-primary" 
+        (click)="onCreateTemplate()"
+        *ngIf="hasRole('Designer')">
+        <i class="icon-plus"></i>
+        Create Template
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Conflict Resolution Modal -->
+<div class="modal-overlay" *ngIf="showConflictModal" (click)="showConflictModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Resolve Conflict</h3>
+      <button class="modal-close" (click)="showConflictModal = false">
+        <i class="icon-x"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <p>This template has conflicts that need to be resolved. Please review the changes and choose how to merge them.</p>
+      
+      <div class="conflict-comparison">
+        <div class="version-comparison">
+          <h4>Version Comparison</h4>
+          <div class="version-details">
+            <!-- Version comparison UI -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="showConflictModal = false">
+        Cancel
+      </button>
+      <button class="btn btn-primary" (click)="onResolveConflictSubmit('Manual merge')">
+        Resolve Conflict
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Logout Confirmation Dialog -->
+@if (showLogoutDialog) {
+  <div class="modern-dialog-overlay" [class.dark-theme]="isDarkMode">
+    <div class="modern-dialog">
+      <div class="dialog-header">
+        <h3>Confirm Logout</h3>
+        <button class="close-button" (click)="cancelLogout()">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="dialog-content">
+        <p>Are you sure you want to logout?</p>
+        <p class="warning-text">You will need to sign in again to access your workspace.</p>
+      </div>
+      <div class="dialog-actions">
+        <button class="cancel-btn" (click)="cancelLogout()" appTooltip="Cancel" tooltipPosition="top">Cancel</button>
+        <button class="logout-btn" (click)="confirmLogout()" appTooltip="Logout" tooltipPosition="top">
+          <i class="icon-log-out"></i>
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Accept Template Dialog -->
+<div class="modern-dialog-overlay" *ngIf="showAcceptDialog">
+  <div class="modern-dialog">
+    <div class="dialog-header">
+      <h3>Accept Template</h3>
+      <button class="close-button" (click)="cancelAcceptTemplate()">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="dialog-content">
+      <p>Please provide approval comments for this template:</p>
+      
+      <div class="form-group">
+        <label for="acceptComments">Approval Comments:</label>
+        <textarea 
+          id="acceptComments"
+          [(ngModel)]="acceptComments"
+          class="modern-textarea"
+          placeholder="Enter your approval comments here (optional)..."
+          rows="4"
+          maxlength="500">
+        </textarea>
+        <div class="character-count">{{ acceptComments.length }}/500</div>
+      </div>
+    </div>
+    
+    <div class="dialog-actions">
+      <button class="cancel-btn" (click)="cancelAcceptTemplate()" appTooltip="Cancel" tooltipPosition="top">Cancel</button>
+      <button class="btn btn-success" 
+              (click)="confirmAcceptTemplate()"
+              [disabled]="isAccepting"
+              appTooltip="Accept Template" tooltipPosition="top">
+        <span *ngIf="!isAccepting">Accept Template</span>
+        <span *ngIf="isAccepting">Accepting...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Template Dialog -->
+<div class="modern-dialog-overlay" *ngIf="showRejectDialog">
+  <div class="modern-dialog">
+    <div class="dialog-header">
+      <h3>Reject Template</h3>
+      <button class="close-button" (click)="cancelRejectTemplate()">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="dialog-content">
+      <p>Please provide a reason for rejecting this template:</p>
+      
+      <div class="form-group">
+        <label for="rejectComments">Rejection Comments:</label>
+        <textarea 
+          id="rejectComments"
+          [(ngModel)]="rejectComments"
+          class="modern-textarea"
+          placeholder="Enter your rejection comments here..."
+          rows="4"
+          maxlength="500">
+        </textarea>
+        <div class="character-count">{{ rejectComments.length }}/500</div>
+      </div>
+    </div>
+    
+    <div class="dialog-actions">
+      <button class="cancel-btn" (click)="cancelRejectTemplate()" appTooltip="Cancel" tooltipPosition="top">Cancel</button>
+      <button class="btn btn-danger" 
+              (click)="confirmRejectTemplate()"
+              [disabled]="!rejectComments.trim() || isRejecting"
+              appTooltip="Reject Template" tooltipPosition="top">
+        <span *ngIf="!isRejecting">Reject Template</span>
+        <span *ngIf="isRejecting">Rejecting...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Template Dialog -->
+<div class="modern-dialog-overlay" *ngIf="showDeleteDialog">
+  <div class="modern-dialog">
+    <div class="dialog-header">
+      <h3>Delete Template</h3>
+      <button class="close-button" (click)="cancelDeleteTemplate()">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="dialog-content">
+      <p>Are you sure you want to delete the template "{{ selectedTemplateForAction?.name }}"?</p>
+      <p class="warning-text">This action cannot be undone.</p>
+    </div>
+    
+    <div class="dialog-actions">
+      <button class="cancel-btn" (click)="cancelDeleteTemplate()" appTooltip="Cancel" tooltipPosition="top">Cancel</button>
+      <button class="delete-btn"
+              (click)="confirmDeleteTemplate()"
+              [disabled]="isDeleting"
+              appTooltip="Delete" tooltipPosition="top">
+        <span *ngIf="!isDeleting">Delete</span>
+        <span *ngIf="isDeleting">Deleting...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Send for Review Dialog -->
+<div class="modern-dialog-overlay" *ngIf="showSendForReviewDialog">
+  <div class="modern-dialog">
+    <div class="dialog-header">
+      <h3>Send for Review</h3>
+      <button class="close-button" (click)="cancelSendForReview()">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="dialog-content">
+      <div class="review-dialog-header">
+        <div class="template-info">
+          <h4>{{ selectedTemplateForAction?.name }}</h4>
+          <p>Ready to send for review</p>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="reviewerSelection" class="form-label">
+          <svg class="label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Assign Reviewer
+        </label>
+        
+        <div class="modern-dropdown">
+          <div class="dropdown-select" 
+               (click)="toggleReviewerDropdown()"
+               [class.active]="showReviewerDropdown">
+            <span class="dropdown-display">{{ getReviewerDisplayName() }}</span>
+            <svg class="dropdown-arrow" 
+                 [class.rotated]="showReviewerDropdown"
+                 viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          
+          @if (showReviewerDropdown) {
+            <div class="dropdown-menu">
+              <div class="dropdown-option" 
+                   (click)="selectReviewer('')"
+                   [class.selected]="selectedReviewerId === ''">
+                <span>Any Available Reviewer</span>
+              </div>
+              @for (reviewer of availableReviewers; track reviewer.userId) {
+                <div class="dropdown-option" 
+                     (click)="selectReviewer(reviewer.userId.toString())"
+                     [class.selected]="selectedReviewerId === reviewer.userId.toString()">
+                  <span>{{ reviewer.name }} ({{ reviewer.email }})</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+        
+        <div class="form-hint">
+          <svg class="hint-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span *ngIf="!selectedReviewerId">Template will be visible to all reviewers in "All Submissions"</span>
+          <span *ngIf="selectedReviewerId">Template will be assigned to selected reviewer in "Assigned to Me"</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="dialog-actions">
+      <button class="cancel-btn" (click)="cancelSendForReview()" appTooltip="Cancel" tooltipPosition="top">Cancel</button>
+      <button class="btn btn-primary" 
+              (click)="confirmSendForReview()"
+              [disabled]="isSendingForReview"
+              appTooltip="Send for Review" tooltipPosition="top">
+        <span *ngIf="!isSendingForReview">Send for Review</span>
+        <span *ngIf="isSendingForReview">Sending...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-overlay" *ngIf="isLoading">
+  <div class="loading-spinner">
+    <i class="icon-loader"></i>
+    <p>Loading dashboard...</p>
+  </div>
+</div>

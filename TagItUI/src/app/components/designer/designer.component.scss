@@ -1,0 +1,24 @@
+/* Designer Component Styles */
+.main-layout {
+  display: flex;
+  height: calc(100vh - 61px); /* Header height + border */
+  width: 100%;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-content.sidebar-expanded {
+  margin-left: 280px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .main-content.sidebar-expanded {
+    margin-left: 0;
+  }
+}

@@ -1,0 +1,106 @@
+<div class="image-import-dialog">
+  <div class="dialog-header">
+    <h3>Import Image</h3>
+    <button class="close-button" (click)="onCancel()" type="button">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="dialog-content">
+    <!-- File Input (Hidden) -->
+    <input
+      #fileInput
+      type="file"
+      accept="image/*"
+      (change)="onFileSelected($event)"
+      style="display: none;">
+
+      <!-- Drop Zone -->
+      <div
+        class="drop-zone"
+        [class.has-file]="selectedFile"
+        [class.dragover]="false"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        (click)="onBrowseFiles()">
+
+        @if (!selectedFile) {
+          <div class="drop-zone-content">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15M17 8L12 3M12 3L7 8M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h4>Drop your image here</h4>
+            <p>or <span class="browse-link">browse files</span></p>
+            <p class="file-info">Supports PNG, JPG, JPEG, GIF, WebP (max 10MB)</p>
+          </div>
+        }
+
+        <!-- File Preview -->
+        @if (selectedFile) {
+          <div class="file-preview">
+            <div class="preview-image">
+              @if (previewUrl) {
+                <img [src]="previewUrl" [alt]="selectedFile.name">
+              }
+            </div>
+            <div class="file-details">
+              <h4>{{ selectedFile.name }}</h4>
+              <p>{{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB</p>
+              <button class="remove-file" (click)="removeSelectedFile()" type="button">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Error Message -->
+      @if (errorMessage) {
+        <div class="error-message">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2"/>
+            <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          {{ errorMessage }}
+        </div>
+      }
+
+      <!-- Upload Progress -->
+      @if (isUploading) {
+        <div class="upload-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="uploadProgress"></div>
+          </div>
+          <p>Processing image...</p>
+        </div>
+      }
+    </div>
+
+    <div class="dialog-actions">
+      <button
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        type="button"
+        [disabled]="isUploading">
+        Cancel
+      </button>
+      <button
+        class="btn btn-primary"
+        (click)="uploadImage()"
+        type="button"
+        [disabled]="!selectedFile || isUploading">
+        @if (!isUploading) {
+          <span>Import Image</span>
+        }
+        @if (isUploading) {
+          <span>Processing...</span>
+        }
+      </button>
+    </div>
+  </div>

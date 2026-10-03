@@ -1,0 +1,255 @@
+<!-- Live Preview Modal -->
+<div class="live-preview-overlay" 
+     *ngIf="isVisible" 
+     [class.dark-theme]="isDarkMode"
+     (click)="onBackdropClick($event)">
+  
+  <div class="live-preview-modal" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="header-info">
+        <h2 class="modal-title">
+          <svg class="preview-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Live Preview
+        </h2>
+        <div class="template-info">
+          <span class="template-name">{{ getTemplateName() }}</span>
+          <span class="template-details">{{ getPaperSizeInfo() }}</span>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <div class="preview-stats">
+          <div class="stat-item">
+            <span class="stat-label">Elements:</span>
+            <span class="stat-value">{{ getElementCount() }}</span>
+          </div>
+          <div class="stat-item" *ngIf="getPlaceholderCount() > 0">
+            <span class="stat-label">Placeholders:</span>
+            <span class="stat-value">{{ getPlaceholderCount() }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Scale:</span>
+            <span class="stat-value">{{ (previewScale * 100).toFixed(0) }}%</span>
+          </div>
+        </div>
+        
+        <button class="close-button" (click)="onClose()" aria-label="Close Preview">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Content -->
+    <div class="modal-content">
+      
+      <!-- Preview Container -->
+      <div class="preview-container">
+        
+        <!-- Paper Layout -->
+        <div class="preview-paper" 
+             [style.width.px]="previewWidth" 
+             [style.height.px]="previewHeight">
+          
+          <!-- Canvas Elements -->
+          <div *ngFor="let element of canvasElements; trackBy: trackElement" 
+               class="preview-element"
+               [class.has-placeholder]="hasPlaceholderSyntax(element.content || '')"
+               [attr.data-element-type]="element.type"
+               [ngStyle]="getElementStyles(element)">
+            
+            <!-- Text Element -->
+            <div *ngIf="element.type === 'text'" 
+                 class="preview-text">
+              {{ getPreviewContent(element) }}
+            </div>
+            
+            <!-- Textarea Element -->
+            <div *ngIf="element.type === 'textarea'" 
+                 class="preview-textarea">
+              {{ getPreviewContent(element) }}
+            </div>
+            
+            <!-- Rectangle Element -->
+            <div *ngIf="element.type === 'rectangle'" 
+                 class="preview-rectangle">
+            </div>
+            
+            <!-- Barcode Element -->
+            <div *ngIf="element.type === 'barcode'" 
+                 class="preview-barcode">
+              <svg class="barcode-svg"
+                   [ngStyle]="getBarcodeStyles(element)"
+                   viewBox="0 0 184 55"
+                   preserveAspectRatio="xMidYMid meet">
+                <!-- Simplified barcode pattern for preview -->
+                <rect x="10" y="5" width="2" height="50" fill="black"/>
+                <rect x="13" y="5" width="1" height="50" fill="black"/>
+                <rect x="15" y="5" width="3" height="50" fill="black"/>
+                <rect x="19" y="5" width="1" height="50" fill="black"/>
+                <rect x="21" y="5" width="2" height="50" fill="black"/>
+                <rect x="24" y="5" width="1" height="50" fill="black"/>
+                <rect x="26" y="5" width="1" height="50" fill="black"/>
+                <rect x="28" y="5" width="2" height="50" fill="black"/>
+                <rect x="31" y="5" width="1" height="50" fill="black"/>
+                <rect x="33" y="5" width="3" height="50" fill="black"/>
+                <rect x="37" y="5" width="1" height="50" fill="black"/>
+                <rect x="39" y="5" width="2" height="50" fill="black"/>
+                <rect x="42" y="5" width="1" height="50" fill="black"/>
+                <rect x="44" y="5" width="1" height="50" fill="black"/>
+                <rect x="46" y="5" width="2" height="50" fill="black"/>
+                <rect x="49" y="5" width="1" height="50" fill="black"/>
+                <rect x="51" y="5" width="3" height="50" fill="black"/>
+                <rect x="55" y="5" width="1" height="50" fill="black"/>
+                <rect x="57" y="5" width="2" height="50" fill="black"/>
+                <rect x="60" y="5" width="1" height="50" fill="black"/>
+                <rect x="62" y="5" width="1" height="50" fill="black"/>
+                <rect x="64" y="5" width="2" height="50" fill="black"/>
+                <rect x="67" y="5" width="1" height="50" fill="black"/>
+                <rect x="69" y="5" width="3" height="50" fill="black"/>
+                <rect x="73" y="5" width="1" height="50" fill="black"/>
+                <rect x="75" y="5" width="2" height="50" fill="black"/>
+                <rect x="78" y="5" width="1" height="50" fill="black"/>
+                <rect x="80" y="5" width="1" height="50" fill="black"/>
+                <rect x="82" y="5" width="2" height="50" fill="black"/>
+                <rect x="85" y="5" width="1" height="50" fill="black"/>
+                <rect x="87" y="5" width="3" height="50" fill="black"/>
+                <rect x="91" y="5" width="1" height="50" fill="black"/>
+                <rect x="93" y="5" width="2" height="50" fill="black"/>
+                <rect x="96" y="5" width="1" height="50" fill="black"/>
+                <rect x="98" y="5" width="1" height="50" fill="black"/>
+                <rect x="100" y="5" width="2" height="50" fill="black"/>
+                <rect x="103" y="5" width="1" height="50" fill="black"/>
+                <rect x="105" y="5" width="3" height="50" fill="black"/>
+                <rect x="109" y="5" width="1" height="50" fill="black"/>
+                <rect x="111" y="5" width="2" height="50" fill="black"/>
+                <rect x="114" y="5" width="1" height="50" fill="black"/>
+                <rect x="116" y="5" width="1" height="50" fill="black"/>
+                <rect x="118" y="5" width="2" height="50" fill="black"/>
+                <rect x="121" y="5" width="1" height="50" fill="black"/>
+                <rect x="123" y="5" width="3" height="50" fill="black"/>
+                <rect x="127" y="5" width="1" height="50" fill="black"/>
+                <rect x="129" y="5" width="2" height="50" fill="black"/>
+                <rect x="132" y="5" width="1" height="50" fill="black"/>
+                <rect x="134" y="5" width="1" height="50" fill="black"/>
+                <rect x="136" y="5" width="2" height="50" fill="black"/>
+                <rect x="139" y="5" width="1" height="50" fill="black"/>
+                <rect x="141" y="5" width="3" height="50" fill="black"/>
+                <rect x="145" y="5" width="1" height="50" fill="black"/>
+                <rect x="147" y="5" width="2" height="50" fill="black"/>
+                <rect x="150" y="5" width="1" height="50" fill="black"/>
+                <rect x="152" y="5" width="1" height="50" fill="black"/>
+                <rect x="154" y="5" width="2" height="50" fill="black"/>
+                <rect x="157" y="5" width="1" height="50" fill="black"/>
+                <rect x="159" y="5" width="3" height="50" fill="black"/>
+                <rect x="163" y="5" width="1" height="50" fill="black"/>
+                <rect x="165" y="5" width="2" height="50" fill="black"/>
+                <rect x="168" y="5" width="1" height="50" fill="black"/>
+                <rect x="170" y="5" width="1" height="50" fill="black"/>
+                <rect x="172" y="5" width="2" height="50" fill="black"/>
+                <rect x="175" y="5" width="1" height="50" fill="black"/>
+                <rect x="177" y="5" width="3" height="50" fill="black"/>
+                <rect x="181" y="5" width="1" height="50" fill="black"/>
+              </svg>
+              <div class="barcode-text" *ngIf="element.content">
+                {{ getPreviewContent(element) }}
+              </div>
+            </div>
+            
+            <!-- QR Code Element -->
+            <div *ngIf="element.type === 'qr'" 
+                 class="preview-qr">
+              <svg class="qr-svg"
+                   [ngStyle]="getBarcodeStyles(element)"
+                   viewBox="0 0 24 24"
+                   preserveAspectRatio="xMidYMid meet">
+                <!-- Simplified QR pattern for preview -->
+                <rect x="3" y="3" width="5" height="5" fill="black"/>
+                <rect x="3" y="10" width="5" height="5" fill="black"/>
+                <rect x="10" y="3" width="5" height="5" fill="black"/>
+                <rect x="16" y="3" width="5" height="5" fill="black"/>
+                <rect x="16" y="10" width="5" height="5" fill="black"/>
+                <rect x="3" y="16" width="5" height="5" fill="black"/>
+                <rect x="10" y="16" width="5" height="5" fill="black"/>
+                <rect x="16" y="16" width="5" height="5" fill="black"/>
+                <rect x="10" y="10" width="2" height="2" fill="black"/>
+                <rect x="13" y="10" width="2" height="2" fill="black"/>
+                <rect x="10" y="13" width="2" height="2" fill="black"/>
+                <rect x="13" y="13" width="2" height="2" fill="black"/>
+              </svg>
+              <div class="qr-text" *ngIf="element.content">
+                {{ getPreviewContent(element) }}
+              </div>
+            </div>
+            
+            <!-- Line Element -->
+            <div *ngIf="element.type === 'line'" 
+                 class="preview-line">
+            </div>
+            
+            <!-- Image Element -->
+            <div *ngIf="element.type === 'image'" 
+                 class="preview-image">
+              <img *ngIf="element.imageSrc" 
+                   [src]="element.imageSrc"
+                   [alt]="element.imageName || 'Image'"
+                   [style.width.px]="element.width * previewScale"
+                   [style.height.px]="element.height * previewScale"
+                   style="object-fit: contain; border-radius: 2px;"/>
+              <div *ngIf="!element.imageSrc" class="image-placeholder">
+                <svg class="image-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                  <path d="M21 15L16 10L5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="image-placeholder-text">{{ element.imageName || 'No image' }}</span>
+              </div>
+            </div>
+            
+          </div>
+          
+        </div>
+        
+        <!-- Empty State -->
+        <div *ngIf="canvasElements.length === 0" class="empty-state">
+          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/>
+            <path d="M9 9H15V15H9V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <h3>No Elements to Preview</h3>
+          <p>Add some elements to your template to see the live preview.</p>
+        </div>
+        
+      </div>
+      
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <div class="footer-info">
+        <div class="info-item">
+          <svg class="info-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>This preview shows your template as it will appear when printed. Placeholders like <code>{{'{{'}}text{{'}}'}}</code> will be replaced with actual data during PDF generation.</span>
+        </div>
+      </div>
+      
+      <div class="footer-actions">
+        <button class="btn btn-secondary" (click)="onClose()">
+          Close Preview
+        </button>
+      </div>
+    </div>
+
+  </div>
+  
+</div>

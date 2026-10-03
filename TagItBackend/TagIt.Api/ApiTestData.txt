@@ -1,0 +1,11 @@
+﻿
+//Test data for adding templates to db
+
+{
+  "name": "Shipping Label 4x6",
+  "description": "Label with barcode",
+  "paperWidth": 4.0,
+  "paperHeight": 6.0,
+  "unit": "inch",
+  "jsonSchema": "{ \"elements\": [ { \"id\": \"txt1\", \"type\": \"text\", \"value\": \"Order #: {{orderId}}\" } ] }"
+}
