@@ -1,0 +1,240 @@
+<div class="csv-import-dialog">
+  <div class="dialog-header">
+    <h3>Import CSV Data</h3>
+    @if (templateId) {
+      <div class="template-info">
+        <span class="template-label">Template ID: {{ templateId }}</span>
+      </div>
+    }
+    <button type="button" class="close-button" (click)="onCancel()" aria-label="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="dialog-content">
+    @if (!hasUploaded) {
+      <div class="file-upload-section">
+        <div class="file-upload-area"
+          [class.drag-over]="false"
+          (click)="onFileUploadClick()"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onFileDrop($event)">
+          <div class="upload-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="upload-text">
+            <p class="upload-title">Click to select CSV or Excel file</p>
+            <p class="upload-subtitle">or drag and drop your file here (.csv, .xlsx, .xls)</p>
+          </div>
+        </div>
+        <input
+          type="file"
+          id="csv-file-input"
+          accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          (change)="onFileSelected($event)"
+          style="display: none;">
+        </div>
+      }
+
+      @if (csvFile) {
+        <div class="file-info">
+          <div class="file-details">
+            <div class="file-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="file-name">{{ csvFile.name }}</div>
+            <div class="file-size">{{ (csvFile.size / 1024).toFixed(1) }} KB</div>
+            @if (fileType) {
+              <div class="file-type">
+                <span class="type-badge" [class.csv]="fileType === 'csv'" [class.excel]="fileType === 'excel'">
+                  {{ fileType.toUpperCase() }}
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Sheet Selection for Excel files -->
+      @if (fileType === 'excel' && availableSheets.length > 1) {
+        <div class="sheet-selection">
+          <label for="sheet-select">Select Sheet:</label>
+          <select id="sheet-select"
+            [(ngModel)]="selectedSheet"
+            (ngModelChange)="onSheetSelectionChange()"
+            class="sheet-select">
+            <option value="">Choose a sheet...</option>
+            @for (sheet of availableSheets; track sheet) {
+              <option [value]="sheet">
+                {{ sheet }}
+              </option>
+            }
+          </select>
+        </div>
+      }
+
+      @if (parsedData) {
+        <div class="preview-section">
+          <div class="preview-header">
+            <h4>Data Preview</h4>
+            <div class="pagination-controls">
+              <label for="items-per-page">Rows per page:</label>
+              <select id="items-per-page"
+                [(ngModel)]="itemsPerPage"
+                (ngModelChange)="onItemsPerPageChange()"
+                class="items-per-page-select">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          </div>
+          <div class="preview-table">
+            <table>
+              <thead>
+                <tr>
+                  <th class="select-column">
+                    <input type="checkbox"
+                      [checked]="selectAll"
+                      (change)="toggleSelectAll()"
+                      title="Select/Deselect all rows on current page">
+                    </th>
+                    @for (header of parsedData.headers; track header) {
+                      <th>{{ header }}</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of getCurrentPageData(); track row; let i = $index) {
+                    <tr
+                      [class.selected]="isRowSelected(getCurrentPageStartIndex() + i)">
+                      <td class="select-column">
+                        <input type="checkbox"
+                          [checked]="isRowSelected(getCurrentPageStartIndex() + i)"
+                          (change)="toggleRowSelection(getCurrentPageStartIndex() + i)">
+                        </td>
+                        @for (header of parsedData.headers; track header) {
+                          <td>{{ row[header] }}</td>
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <!-- Pagination Controls -->
+              @if (totalPages > 1) {
+                <div class="pagination">
+                  <div class="pagination-info">
+                    Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to {{ getMathMin(currentPage * itemsPerPage, getTotalRows()) }} of {{ getTotalRows() }} entries
+                  </div>
+                  <div class="pagination-buttons">
+                    <button class="pagination-btn"
+                      (click)="goToFirstPage()"
+                      [disabled]="currentPage === 1"
+                      title="First page">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11 19L4 12L11 5M20 19L13 12L20 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <button class="pagination-btn"
+                      (click)="goToPreviousPage()"
+                      [disabled]="currentPage === 1"
+                      title="Previous page">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <div class="page-numbers">
+                      @for (page of getPageNumbers(); track page) {
+                        <button
+                          class="page-number-btn"
+                          [class.active]="page === currentPage"
+                          (click)="goToPage(page)">
+                          {{ page }}
+                        </button>
+                      }
+                    </div>
+                    <button class="pagination-btn"
+                      (click)="goToNextPage()"
+                      [disabled]="currentPage === totalPages"
+                      title="Next page">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <button class="pagination-btn"
+                      (click)="goToLastPage()"
+                      [disabled]="currentPage === totalPages"
+                      title="Last page">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 19L20 12L13 5M4 19L11 12L4 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          @if (errorMessage) {
+            <div class="error-message">
+              <div class="error-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                  <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2"/>
+                  <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </div>
+              <span>{{ errorMessage }}</span>
+            </div>
+          }
+
+          @if (successMessage) {
+            <div class="success-message">
+              <div class="success-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span>{{ successMessage }}</span>
+            </div>
+          }
+
+          @if (isProcessing) {
+            <div class="loading-indicator">
+              <div class="spinner"></div>
+              <span>{{ selectedRows.size === 1 ? 'Processing CSV and generating PDF...' : 'Processing CSV and generating PDFs...' }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" (click)="onReset()" [disabled]="isProcessing">
+            Reset
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="isProcessing">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" (click)="onGenerateBulkPDF()" [disabled]="!parsedData || isProcessing || selectedRows.size === 0">
+            @if (isProcessing) {
+              <span class="spinner"></span>
+            }
+            {{ selectedRows.size === 1 ? 'Generate PDF' : 'Generate PDFs' }} {{ selectedRows.size > 0 ? '(' + selectedRows.size + ' selected)' : '' }}
+          </button>
+        </div>
+      </div>

@@ -1,0 +1,11 @@
+@TagIt.Api_HostAddress = http://localhost:5222
+
+GET {{TagIt.Api_HostAddress}}/api/templates/
+Accept: application/json
+
+###
+
+GET {{TagIt.Api_HostAddress}}/api/templates/1
+Accept: application/json
+
+###

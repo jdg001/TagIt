@@ -1,0 +1,745 @@
+<!-- Header Bar -->
+<header class="header">
+  <!-- Brand -->
+  <div class="brand" (click)="onBrandClick()" [style.cursor]="'pointer'">
+    <img class="logo" src="assets/tagit-logo.svg" alt="TagIt Logo" width="48" height="48">
+    <div class="brand-text">
+      <span class="brand-name">tag<span class="brand-accent">IT</span></span>
+      <span class="brand-tagline">Label Designer</span>
+    </div>
+  </div>
+
+  <!-- Center Dynamic Island -->
+  <div class="center-controls"> 
+    <!-- Paper Size Input - Only show if viewing mode allows, template not submitted, and not in collaboration mode -->
+    @if (viewingMode.canChangeSize && !isTemplateSubmitted && !isCollaborationMode) {
+    <div class="control-group paper-size-group">
+      <label>Paper Size:</label>
+      <div class="paper-size-container">
+        <!-- Paper Size Dropdown -->
+        <div class="paper-size-dropdown">
+          <div class="paper-size-select"
+            (click)="togglePaperSizeDropdown()"
+            [class.active]="showPaperSizeDropdown">
+            <span class="paper-size-display">{{ getPaperSizeDisplayName() }}</span>
+            <svg class="dropdown-arrow"
+              [class.rotated]="showPaperSizeDropdown"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+
+          <!-- Paper Size Dropdown Menu -->
+          @if (showPaperSizeDropdown) {
+            <div class="paper-size-dropdown-menu"
+              >
+              <div class="paper-size-option"
+                (click)="selectPaperSize('custom')"
+                [class.selected]="selectedDefaultSize === 'custom'">
+                <span class="paper-size-name">Custom</span>
+              </div>
+              <!-- Standard Paper Sizes -->
+              <div class="paper-size-section">
+                <div class="paper-size-section-title">Standard Sizes</div>
+                @for (paperSize of standardPaperSizes; track paperSize) {
+                  <div class="paper-size-option"
+                    (click)="selectPaperSize(paperSize.name)"
+                    [class.selected]="selectedDefaultSize === paperSize.name">
+                    <span class="paper-size-name">{{ paperSize.description }}</span>
+                  </div>
+                }
+              </div>
+              <!-- Label Sizes -->
+              <div class="paper-size-section">
+                <div class="paper-size-section-title">Label Sizes</div>
+                @for (labelSize of labelSizes; track labelSize) {
+                  <div class="paper-size-option"
+                    (click)="selectPaperSize(labelSize.name)"
+                    [class.selected]="selectedDefaultSize === labelSize.name">
+                    <span class="paper-size-name">{{ labelSize.name }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Custom Size Inputs - Now adjacent to dropdown -->
+        <div class="paper-size-inputs" [class.hidden]="selectedDefaultSize !== 'custom'">
+          <div class="size-input-container">
+            <input type="number"
+              class="size-input"
+              placeholder="Width"
+              [value]="formattedPaperWidth"
+              (input)="onWidthInputChange($event)"
+              min="1"
+              max="1000"
+              step="0.01">
+              <span class="input-label">W</span>
+            </div>
+            <div class="size-separator">×</div>
+            <div class="size-input-container">
+              <input type="number"
+                class="size-input"
+                placeholder="Height"
+                [value]="formattedPaperHeight"
+                (input)="onHeightInputChange($event)"
+                min="1"
+                max="1000"
+                step="0.01">
+                <span class="input-label">H</span>
+              </div>
+              <div class="unit-selector">
+                <select class="unit-select"
+                  [(ngModel)]="paperUnit"
+                  (ngModelChange)="onPaperSizeInputChange()">
+                  <option value="cm">cm</option>
+                  <option value="inch">inch</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+    }
+    
+    <div class="undo-redo-controls dynamic-island" [class.expanded]="hasSelection || hasGroups">
+      <button class="undo-button" 
+              (click)="onUndo()" 
+              [disabled]="!canUndo" 
+              appTooltip="Undo (Ctrl+Z)" 
+              tooltipPosition="bottom">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 7V5C3 3.89543 3.89543 3 5 3H16L21 8V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 9L5 13L9 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button class="redo-button" 
+              (click)="onRedo()" 
+              [disabled]="!canRedo" 
+              appTooltip="Redo (Ctrl+Y)" 
+              tooltipPosition="bottom">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 7V5C21 3.89543 20.1046 3 19 3H8L3 8V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M15 9L19 13L15 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <!-- Expanded actions: show when a canvas element is selected or when there are groups -->
+      <div class="island-actions" *ngIf="hasSelection || hasGroups">
+        <div class="separator"></div>
+        <button class="bring-front-button" (click)="onBringToFront()" appTooltip="Front (Ctrl+Shift+F)" tooltipPosition="bottom" *ngIf="hasSelection">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 3H21V21H3V3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 9H15V15H9V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 6V18M6 12H18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="delete-button-compact" (click)="onDeleteSelected()" appTooltip="Delete" tooltipPosition="bottom" *ngIf="hasSelection">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="ungroup-all-button" (click)="onUngroupAll()" appTooltip="Ungroup All Elements" tooltipPosition="bottom" *ngIf="hasGroups">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 7V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V7M3 7V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V7M3 7H21M8 9H10M8 13H10M14 9H16M14 13H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Template Name Display -->
+    <div class="control-group">
+      <label>Template Name:</label>
+      <div class="template-name-display">
+        <span class="template-name-text">{{ selectedTemplate?.name || 'Untitled Template' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="header-controls">
+
+          <!-- Add New Button - Always show when template is submitted, otherwise follow viewing mode -->
+          @if (isTemplateSubmitted || viewingMode.canCreateNew) {
+          <button class="add-new-button"
+            (click)="onAddNewTemplate()"
+            appTooltip="New" tooltipPosition="bottom">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          }
+
+    <!-- Save Button -->
+    @if (viewingMode.canSave && !isTemplateSubmitted) {
+      <button class="save-button" 
+            (click)="onSaveTemplate()"
+            [disabled]="isSaving"
+              [appTooltip]="viewingMode.saveTooltip" tooltipPosition="bottom">
+        @if (!isSaving) {
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16L21 8V19C21 20.1046 20.1046 21 19 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M17 21V13H7V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M7 3V8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+        }
+        @if (isSaving) {
+          <svg class="spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="32" stroke-dashoffset="32">
+          <animate attributeName="stroke-dasharray" dur="2s" values="0 32;16 16;0 32" repeatCount="indefinite"/>
+          <animate attributeName="stroke-dashoffset" dur="2s" values="0;-16;-32" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+        }
+    </button>
+    }
+
+    <!-- Send for Review Button -->
+    @if ((viewingMode.canSendForReview || (viewingMode.canResolveComments && unresolvedCommentCount === 0)) && !isTemplateSubmitted) {
+      <button class="send-review-button" 
+            (click)="onSendForReview()"
+            [disabled]="isSendingForReview"
+            appTooltip="Send for Review" tooltipPosition="bottom">
+      <svg *ngIf="!isSendingForReview" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <svg *ngIf="isSendingForReview" class="spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="32" stroke-dashoffset="32">
+          <animate attributeName="stroke-dasharray" dur="2s" values="0 32;16 16;0 32" repeatCount="indefinite"/>
+          <animate attributeName="stroke-dashoffset" dur="2s" values="0;-16;-32" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+    </button>
+    }
+
+    <!-- View Comments Button (for designers viewing rejected templates) -->
+    @if (viewingMode.showCommentsButton && !isTemplateSubmitted) {
+      <button class="view-comments-button" 
+            [class.active]="isCommentMode"
+            (click)="onViewCommentsClick()"
+            appTooltip="View Comments" tooltipPosition="bottom">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    }
+
+    <!-- Reviewer Buttons: Accept/Reject and Publish -->
+    <ng-container *ngIf="shouldShowReviewerButtons() && !isTemplateSubmitted">
+      <!-- Accept Button (shows when template is under review or approved, disabled if comments exist) -->
+      <button *ngIf="shouldShowAcceptButton()" 
+              class="accept-button" 
+              (click)="onAcceptTemplate()"
+              [disabled]="hasComments()"
+              [appTooltip]="hasComments() ? 'Cannot accept template with unresolved comments' : 'Accept Template'" 
+              tooltipPosition="bottom">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <!-- Reject Button (shows when template is under review or approved, but not published) -->
+      <button *ngIf="(isTemplateAssignedToReviewer() || isTemplateApproved()) && !isTemplatePublished()" 
+              class="reject-button" 
+              (click)="onRejectTemplate()"
+              appTooltip="Reject Template" tooltipPosition="bottom">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <!-- [CHANGE] Add Comments Button (shows only when template is under review, hidden when approved) -->
+      <button *ngIf="isTemplateAssignedToReviewer()" 
+              class="add-comments-button" 
+              [class.active]="isCommentMode"
+              (click)="toggleCommentMode()"
+              appTooltip="Add Comments" tooltipPosition="bottom">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13 8H7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 12H7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <!-- Publish Button (shows when template is approved) -->
+      <button *ngIf="isTemplateApproved()" 
+              class="publish-button" 
+              (click)="onPublishTemplate()"
+              appTooltip="Publish Template" tooltipPosition="bottom">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </ng-container>
+
+          <!-- Delete/Clear Button -->
+          @if (selectedTemplate && viewingMode.canDeleteTemplate && !isTemplateSubmitted) {
+            <button
+              class="delete-button"
+              (click)="onDeleteSelectedTemplate()"
+              [disabled]="isDeleting"
+              appTooltip="Delete" tooltipPosition="bottom">
+              @if (!isDeleting) {
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              }
+              @if (isDeleting) {
+                <svg class="spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="32" stroke-dashoffset="32">
+                    <animate attributeName="stroke-dasharray" dur="2s" values="0 32;16 16;0 32" repeatCount="indefinite"/>
+                    <animate attributeName="stroke-dashoffset" dur="2s" values="0;-16;-32" repeatCount="indefinite"/>
+                  </circle>
+                </svg>
+              }
+            </button>
+          }
+
+          @if (!selectedTemplate && viewingMode.canClearCanvas && !isTemplateSubmitted) {
+            <button
+              class="clear-button"
+              (click)="onClearCanvas()"
+              appTooltip="Clear" tooltipPosition="bottom">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          }
+
+          <!-- Generate PDF Button -->
+          @if (viewingMode.canGeneratePDF && !isTemplateSubmitted && !isCollaborationMode) {
+          <button class="pdf-button"
+            (click)="onGeneratePDF()"
+            [disabled]="isGeneratingPDF"
+            appTooltip="Generate PDF" tooltipPosition="bottom">
+            @if (!isGeneratingPDF) {
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            }
+            @if (isGeneratingPDF) {
+              <svg class="spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="32" stroke-dashoffset="32">
+                  <animate attributeName="stroke-dasharray" dur="2s" values="0 32;16 16;0 32" repeatCount="indefinite"/>
+                  <animate attributeName="stroke-dashoffset" dur="2s" values="0;-16;-32" repeatCount="indefinite"/>
+                </circle>
+              </svg>
+            }
+          </button>
+          }
+
+          <!-- Collaboration Mode Toggle -->
+          <button class="collaboration-toggle"
+            (click)="toggleCollaborationMode()"
+            [class.active]="isCollaborationMode"
+            [appTooltip]="isCollaborationMode ? 'Disable Collaboration' : 'Enable Collaboration'" 
+            tooltipPosition="bottom"
+            *ngIf="shouldShowCollaborationButton()">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17 21V19C17 17.134 13.866 14 10 14C6.134 14 3 17.134 3 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M23 21V19C23 17.136 21.864 16 20 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M16 3.13C16.86 3.39 17.61 3.89 18.13 4.58" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            @if (isCollaborationMode && collaborationUsers.length > 0) {
+              <span class="user-count">{{ collaborationUsers.length }}</span>
+            }
+          </button>
+
+          <!-- Theme Toggle -->
+          <button class="theme-toggle"
+            (click)="onToggleTheme()"
+            [attr.aria-label]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+            [appTooltip]="isDarkMode ? 'Light' : 'Dark'" tooltipPosition="bottom">
+            @if (!isDarkMode) {
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.752 15.002A9.718 9.718 0 0118 15.75C13.032 15.75 9 11.718 9 6.75C9 4.876 9.348 3.09 10.002 1.5C6.824 2.706 4.5 5.652 4.5 9.75C4.5 14.718 8.532 18.75 13.5 18.75C17.598 18.75 20.544 16.426 21.752 15.002Z" fill="currentColor"/>
+              </svg>
+            }
+            @if (isDarkMode) {
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2.25A.75.75 0 013.75 12C3.75 16.556 7.444 20.25 12 20.25S20.25 16.556 20.25 12A.75.75 0 0112 2.25ZM7.5 12C7.5 9.515 9.515 7.5 12 7.5S16.5 9.515 16.5 12S14.485 16.5 12 16.5S7.5 14.485 7.5 12Z" fill="currentColor"/>
+              </svg>
+            }
+          </button>
+        </div>
+    </header>
+
+      <!-- Toast/Banner stack -->
+      @if (banners.length) {
+        <div class="banner-stack">
+          @for (b of banners; track trackBanner($index, b)) {
+            <div class="banner"
+              [class.info]="b.kind==='info'"
+              [class.success]="b.kind==='success'"
+              [class.warning]="b.kind==='warning'"
+              [class.error]="b.kind==='error'"
+              [class.dismissing]="b.dismissing">
+              <span class="banner-icon" aria-hidden="true">
+                <!-- simple icon by kind -->
+                @if (b.kind==='success') {
+                  <svg viewBox="0 0 24 24" width="16" height="16"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                }
+                @if (b.kind==='warning') {
+                  <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                }
+                @if (b.kind==='error') {
+                  <svg viewBox="0 0 24 24" width="16" height="16"><path d="M18 6L6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                }
+                @if (b.kind==='info') {
+                  <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4m0-4h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                }
+              </span>
+              <span class="banner-text">{{ b.text }}</span>
+              <button class="banner-close" (click)="dismissBanner(b.id)" aria-label="Dismiss">
+                <svg viewBox="0 0 24 24" width="14" height="14"><path d="M18 6L6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Template Name Dialog -->
+      @if (showTemplateNameDialog) {
+        <div class="modern-dialog-overlay">
+          <div class="modern-dialog">
+            <div class="dialog-header">
+              <h3>Save Template</h3>
+              <button class="close-button" (click)="cancelSaveTemplate()">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div class="dialog-content">
+              <div class="form-group">
+                <label for="template-name">Template Name *</label>
+                <input type="text"
+                  id="template-name"
+                  [(ngModel)]="templateName"
+                  (ngModelChange)="onTemplateNameChange()"
+                  [class.duplicate-name]="isDuplicateName"
+                  [class.checking-duplicate]="isCheckingDuplicate"
+                  placeholder="Enter template name"
+                  maxlength="50">
+                  @if (isDuplicateName) {
+                    <div class="validation-message">
+                      A template with this name already exists.
+                    </div>
+                  }
+                  @if (isCheckingDuplicate) {
+                    <div class="checking-message">
+                      Checking name availability...
+                    </div>
+                  }
+                </div>
+                <div class="form-group">
+                  <label for="template-description">Description (Optional)</label>
+                  <textarea id="template-description"
+                    [(ngModel)]="templateDescription"
+                    placeholder="Enter template description"
+                    rows="3"
+                  maxlength="200"></textarea>
+                </div>
+              </div>
+              <div class="dialog-actions">
+                <button class="cancel-btn" (click)="cancelSaveTemplate()" appTooltip="Cancel" tooltipPosition="top">Cancel</button>
+                <button class="save-btn"
+                  (click)="confirmSaveTemplate()"
+                  [disabled]="!templateName.trim() || isDuplicateName || isSaving"
+                  appTooltip="Save" tooltipPosition="top">
+                  @if (!isSaving) {
+                    <span>Save</span>
+                  }
+                  @if (isSaving) {
+                    <span>Saving...</span>
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Delete Confirmation Dialog -->
+        @if (showDeleteDialog) {
+          <div class="modern-dialog-overlay">
+            <div class="modern-dialog">
+              <div class="dialog-header">
+                <h3>Delete Template</h3>
+                <button class="close-button" (click)="cancelDeleteTemplate()">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="dialog-content">
+                <p>Are you sure you want to delete the template "{{selectedTemplate?.name}}"?</p>
+                <p class="warning-text">This action cannot be undone.</p>
+              </div>
+              <div class="dialog-actions">
+                <button class="cancel-btn" (click)="cancelDeleteTemplate()" appTooltip="Cancel" tooltipPosition="top">Cancel</button>
+                <button class="delete-btn"
+                  (click)="confirmDeleteTemplate()"
+                  [disabled]="isDeleting"
+                  appTooltip="Delete" tooltipPosition="top">
+                  @if (!isDeleting) {
+                    <span>Delete</span>
+                  }
+                  @if (isDeleting) {
+                    <span>Deleting...</span>
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Save Existing Template Dialog -->
+        @if (showSaveExistingDialog) {
+          <div class="modern-dialog-overlay">
+            <div class="modern-dialog">
+              <div class="dialog-header">
+                <h3>Template Already Saved</h3>
+                <button class="close-button" (click)="cancelSaveExistingDialog()">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="dialog-content">
+                <p>The layout is already saved as "{{selectedTemplate?.name}}".</p>
+                <p>What would you like to do?</p>
+              </div>
+              <div class="dialog-actions">
+                <button class="cancel-btn" (click)="cancelSaveExistingDialog()" appTooltip="Cancel" tooltipPosition="top">Cancel</button>
+                @if (viewingMode.canSaveAsNew) {
+                  <button class="btn btn-secondary" (click)="onSaveNewTemplate()" appTooltip="Save as new template" tooltipPosition="top">Save New</button>
+                }
+                <button class="btn btn-primary"
+                  (click)="onUpdateExistingTemplate()"
+                  [disabled]="isSaving"
+                  appTooltip="Update existing template" tooltipPosition="top">
+                  @if (!isSaving) {
+                    <span>Update Existing</span>
+                  }
+                  @if (isSaving) {
+                    <span>Updating...</span>
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Placeholder Dialog -->
+        @if (showPlaceholderDialog) {
+          <div class="placeholder-dialog-overlay" (click)="onPlaceholderDialogClose()">
+            <div class="placeholder-dialog" (click)="$event.stopPropagation()">
+              <div class="placeholder-dialog-header">
+                <h3>Resolve Placeholders</h3>
+                <div class="header-actions">
+                  <button class="import-csv-btn" (click)="onShowCsvImport()" tooltipPosition="left">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Import CSV</span>
+                  </button>
+                </div>
+              </div>
+              <div class="placeholder-dialog-content">
+                <p>Please provide values for all placeholders before generating PDF:</p>
+                <div class="placeholder-inputs">
+                  @for (placeholderType of getUniquePlaceholderTypes(); track placeholderType) {
+                    <div class="placeholder-input-group">
+                      <label [for]="'placeholder-' + placeholderType">{{placeholderType | titlecase}}:</label>
+                      <!-- Textarea for textarea placeholders -->
+                      @if (isPlaceholderFromTextarea(placeholderType)) {
+                        <textarea
+                          [id]="'placeholder-' + placeholderType"
+                          [value]="placeholderValues[placeholderType] || ''"
+                          (input)="onPlaceholderInput($event, placeholderType)"
+                          placeholder="Enter value for {{placeholderType}}"
+                          class="placeholder-input textarea-input"
+                          rows="3">
+                        </textarea>
+                      }
+                      <!-- Regular input for other placeholders -->
+                      @if (!isPlaceholderFromTextarea(placeholderType)) {
+                        <input
+                          [id]="'placeholder-' + placeholderType"
+                          type="text"
+                          [value]="placeholderValues[placeholderType] || ''"
+                          (input)="onPlaceholderInput($event, placeholderType)"
+                          placeholder="Enter value for {{placeholderType}}"
+                          class="placeholder-input">
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+              <div class="placeholder-dialog-actions">
+                <button class="btn btn-secondary" (click)="onPlaceholderDialogClose()">Cancel</button>
+                <button class="btn btn-primary" (click)="onPlaceholderDialogComplete()"
+                  [disabled]="getUnresolvedPlaceholders().length > 0">
+                  Generate PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+<!-- CSV Import Dialog -->
+<div class="modern-dialog-overlay" *ngIf="showCsvImportDialog">
+  <app-csv-import 
+    [templateId]="currentTemplateId"
+    [notify]="showBanner.bind(this)"
+    (csvDataImported)="onCsvDataImported($event)"
+    (bulkPdfGenerated)="onBulkPdfGenerated($event)"
+    (importCancelled)="onCsvImportCancelled()">
+  </app-csv-import>
+</div>
+
+<!-- Send for Review Dialog -->
+<div class="modern-dialog-overlay" *ngIf="showSendForReviewDialog">
+  <div class="modern-dialog">
+    <div class="dialog-header">
+      <h3>Send for Review</h3>
+      <button class="close-button" (click)="cancelSendForReview()">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="dialog-content">
+      <div class="review-dialog-header">
+        <div class="template-info">
+          <h4>{{selectedTemplate?.name}}</h4>
+          <p>Ready to send for review</p>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="reviewerSelection" class="form-label">
+          <svg class="label-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Assign Reviewer
+        </label>
+        
+        <div class="modern-dropdown">
+          <div class="dropdown-select" 
+               (click)="toggleReviewerDropdown()"
+               [class.active]="showReviewerDropdown">
+            <span class="dropdown-display">{{ getReviewerDisplayName() }}</span>
+            <svg class="dropdown-arrow" 
+                 [class.rotated]="showReviewerDropdown"
+                 viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          
+          @if (showReviewerDropdown) {
+            <div class="dropdown-menu">
+              <div class="dropdown-option" 
+                   (click)="selectReviewer('')"
+                   [class.selected]="selectedReviewerId === ''">
+                <span>Any Available Reviewer</span>
+              </div>
+              @for (reviewer of availableReviewers; track reviewer.userId) {
+                <div class="dropdown-option" 
+                     (click)="selectReviewer(reviewer.userId.toString())"
+                     [class.selected]="selectedReviewerId === reviewer.userId.toString()">
+                  <span>{{reviewer.name}}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+        
+        <div class="form-hint">
+          <svg class="hint-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span *ngIf="!selectedReviewerId">Template will be visible to all reviewers in "All Submissions"</span>
+          <span *ngIf="selectedReviewerId">Template will be assigned to selected reviewer in "Assigned to Me"</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="dialog-actions">
+      <button class="cancel-btn" (click)="cancelSendForReview()" appTooltip="Cancel" tooltipPosition="top">Cancel</button>
+      <button class="btn btn-primary" 
+              (click)="confirmSendForReview()"
+              [disabled]="isSendingForReview"
+              appTooltip="Send for Review" tooltipPosition="top">
+        <span *ngIf="!isSendingForReview">Send for Review</span>
+        <span *ngIf="isSendingForReview">Sending...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Template Dialog -->
+<div class="modern-dialog-overlay" *ngIf="showRejectDialog">
+  <div class="modern-dialog">
+    <div class="dialog-header">
+      <h3>Reject Template</h3>
+      <button class="close-button" (click)="cancelRejectTemplate()">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="dialog-content">
+      <p>Please provide a reason for rejecting this template:</p>
+      
+      <div class="form-group">
+        <label for="rejectComments">Rejection Comments:</label>
+        <textarea 
+          id="rejectComments"
+          [(ngModel)]="rejectComments"
+          class="modern-textarea"
+          placeholder="Enter your rejection comments here..."
+          rows="4"
+          maxlength="500">
+        </textarea>
+        <div class="character-count">{{ rejectComments.length }}/500</div>
+      </div>
+    </div>
+    
+    <div class="dialog-actions">
+      <button class="cancel-btn" (click)="cancelRejectTemplate()" appTooltip="Cancel" tooltipPosition="top">Cancel</button>
+      <button class="btn btn-danger" 
+              (click)="confirmRejectTemplate()"
+              [disabled]="!rejectComments.trim() || isRejecting"
+              appTooltip="Reject Template" tooltipPosition="top">
+        <span *ngIf="!isRejecting">Reject Template</span>
+        <span *ngIf="isRejecting">Rejecting...</span>
+      </button>
+    </div>
+  </div>
+</div>

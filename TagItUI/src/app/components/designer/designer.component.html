@@ -1,0 +1,113 @@
+<!-- Designer Component - Contains all designer UI elements -->
+<div class="app-container" [class.dark-theme]="isDarkMode">
+  <!-- Header Component -->
+  <app-header 
+      [canvasElements]="canvasElements" 
+      [selectedTemplate]="selectedTemplate"
+      [canvasComponent]="canvasComponent"
+      [viewingMode]="viewingMode"
+      [currentDesignStateId]="currentDesignStateId"
+      [isCollaborationMode]="isCollaborationMode"
+      [canUndo]="canUndo"
+      [canRedo]="canRedo"
+      [hasSelection]="!!selectedElement"
+      [elementGroups]="elementGroups"
+      (canvasElementsChange)="onCanvasElementsChange($event)" 
+      (selectedElementChange)="onSelectedElementChange($event)"
+      (selectedPaperSizeChange)="onPaperSizeChange($event)" 
+      (selectedTemplateChange)="onSelectedTemplateChange($event)" 
+      (showDeleteDialogChange)="onShowDeleteDialogChange($event)" 
+      (themeChange)="onThemeChange($event)"
+      (clearReferenceLines)="onClearReferenceLines()" 
+      (clearAll)="onClearAll()" 
+      (resetZoom)="onResetZoom()"
+      (clearGrouping)="onClearGrouping()" 
+      (resetSmartLayout)="onResetSmartLayout()"
+      (commentModeChange)="onCommentModeChange($event)"
+      (bringToFront)="onElementBringToFront()"
+      (deleteSelected)="onElementDelete(selectedElement!.id)"
+      (ungroupAll)="onUngroupAllElements()"
+      (undo)="onUndo()"
+      (redo)="onRedo()"
+      (collaborationModeChange)="onCollaborationModeChange($event)">
+  </app-header>
+
+  <!-- Main Layout Container -->
+  <div class="main-layout">
+    <div class="main-content" [class.sidebar-expanded]="isSidebarExpanded">
+    <!-- Navigation Component - Only show if viewing mode allows -->
+    @if (viewingMode.showNavigation) {
+      <app-navigation 
+        [isGroupingMode]="isGroupingMode" 
+        [isSmartLayoutMode]="isSmartLayoutMode"
+        [isLivePreviewActive]="isLivePreviewActive"
+        [viewingMode]="viewingMode"
+        (toolDragStart)="onToolDragStart($event.event, $event.toolType)"
+        (templateComponentDragStart)="onTemplateComponentDragStart($event.event, $event.componentType)"
+        (placeholderDragStart)="onPlaceholderDragStart($event.event, $event.placeholderType)"
+        (createElement)="onCreateElement($event)" 
+        (groupingModeChange)="onGroupingModeChange($event)"
+        (smartLayoutModeChange)="onSmartLayoutModeChange($event)"
+        (livePreviewToggle)="onLivePreviewToggle()">
+      </app-navigation>
+    }
+
+    <!-- Canvas Area -->
+    <!-- Canvas Component -->
+    <app-canvas #canvasComponent 
+      [canvasElements]="canvasElements" 
+      [selectedElement]="selectedElement"
+      [selectedPaperSize]="selectedPaperSize" 
+      [isSidebarExpanded]="isSidebarExpanded"
+      [clearReferenceLinesSignal]="clearReferenceLinesSignal" 
+      [isGroupingMode]="isGroupingMode"
+      [isSmartLayoutMode]="isSmartLayoutMode"
+      [viewingMode]="viewingMode"
+      [isCommentMode]="isCommentMode"
+      [currentDesignStateId]="currentDesignStateId"
+      [currentUserId]="currentUserId"
+      [canResolveComments]="viewingMode.canResolveComments"
+      [headerComponent]="headerComponent"
+      (canvasElementsChange)="onCanvasElementsChange($event)"
+      (selectedElementChange)="onSelectedElementChange($event)" 
+      (paperLayoutChange)="onPaperLayoutChange($event)"
+      (paperLayoutResized)="onPaperLayoutResized($event)" 
+      (elementGroupsChange)="onElementGroupsChange($event)"
+      (showBanner)="onCanvasShowBanner($event)">
+    </app-canvas>
+
+    <!-- Properties Component - Only show if viewing mode allows -->
+    @if (viewingMode.showPropertiesPanel) {
+      <app-properties 
+        [selectedElement]="selectedElement"
+        [viewingMode]="viewingMode"
+        (elementUpdate)="onElementUpdate($event)"
+        (elementDeselect)="onElementDeselect()"
+        (lineOrientationChange)="onLineOrientationChange($event)">
+      </app-properties>
+    }
+
+    <!-- Grouping Details Component - Only show if viewing mode allows navigation -->
+    @if (viewingMode.showNavigation) {
+      <app-grouping-details 
+        [elementGroups]="elementGroups" 
+        [canvasElements]="canvasElements"
+        (ungroupAll)="onUngroupAllElements()" 
+        (ungroupElement)="onUngroupSingleElement($event)"
+        (ungroupGroup)="onUngroupGroup($event)" 
+        (elementHover)="onElementHover($event)">
+      </app-grouping-details>
+
+      <!-- Smart Layout Panel Component -->
+      <app-smart-layout-panel 
+        [isVisible]="isSmartLayoutPanelVisible && isSmartLayoutMode"
+        [settings]="smartLayoutSettings"
+        (settingsChange)="onSmartLayoutSettingsChange($event)">
+      </app-smart-layout-panel>
+    }
+    </div>
+  </div>
+
+  <!-- User Presence Component -->
+  <app-user-presence *ngIf="isCollaborationMode"></app-user-presence>
+</div>

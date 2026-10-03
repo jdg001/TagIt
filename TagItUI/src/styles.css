@@ -1,0 +1,323 @@
+/* You can add global styles to this file, and also import other style files */
+
+/* CSS Custom Properties for Theme Support */
+:root {
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+  --secondary-color: #6b7280;
+  --success-color: #10b981;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --accent-color: #8b5cf6;
+  
+  /* Light theme variables */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border-color: #b8bdc2;
+  --border-hover: #cbd5e1;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --grid-color: #e2e8f0;
+  --grid-major-color: #797979;
+  --grid-minor-color: #444444;
+  --grid-sub-minor-color: #00082f;
+  --ruler-bg: #f8fafc;
+  --ruler-text: #64748b;
+  --tooltip-bg: #1e293b;
+  --tooltip-text: #f8fafc;
+  --tooltip-border: #374151;
+}
+
+/* Dark theme variables */
+.dark-theme {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: #374151;
+  --border-hover: #4b5563;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+  --grid-color: #374151;
+  --grid-major-color: #686868;
+  --grid-minor-color: #dadada;
+  --grid-sub-minor-color: #bcbcbc;
+  --ruler-bg: #1e293b;
+  --ruler-text: #9ca3af;
+  --tooltip-bg: #f8fafc;
+  --tooltip-text: #1e293b;
+  --tooltip-border: #e2e8f0;
+}
+
+/* Remove the browser's default 8px margin and sync backgrounds */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Make the app fill the viewport and avoid layout gaps */
+app-root, .app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; 
+}
+
+/* Modern Tooltip Styles */
+.modern-tooltip {
+  position: fixed;
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.95) 0%, rgba(55, 65, 81, 0.95) 100%);
+  color: #f9fafb;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  max-width: 200px;
+  word-wrap: break-word;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.85) translateY(4px);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(75, 85, 99, 0.4);
+  letter-spacing: 0.025em;
+}
+
+.modern-tooltip.tooltip-visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* Light theme */
+.modern-tooltip.tooltip-light {
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.95) 0%, rgba(55, 65, 81, 0.95) 100%);
+  color: #f9fafb;
+  border: 1px solid rgba(75, 85, 99, 0.4);
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Dark theme */
+.modern-tooltip.tooltip-dark {
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.95) 0%, rgba(55, 65, 81, 0.95) 100%);
+  color: #f9fafb;
+  border: 1px solid rgba(75, 85, 99, 0.4);
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Arrow styles */
+.modern-tooltip::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Top arrow */
+.modern-tooltip.tooltip-top::before {
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: rgba(31, 41, 55, 0.95);
+}
+
+.modern-tooltip.tooltip-light.tooltip-top::before {
+  border-top-color: rgba(31, 41, 55, 0.95);
+}
+
+.modern-tooltip.tooltip-dark.tooltip-top::before {
+  border-top-color: rgba(31, 41, 55, 0.95);
+}
+
+/* Bottom arrow */
+.modern-tooltip.tooltip-bottom::before {
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-bottom-color: rgba(31, 41, 55, 0.95);
+}
+
+.modern-tooltip.tooltip-light.tooltip-bottom::before {
+  border-bottom-color: rgba(31, 41, 55, 0.95);
+}
+
+.modern-tooltip.tooltip-dark.tooltip-bottom::before {
+  border-bottom-color: rgba(31, 41, 55, 0.95);
+}
+
+/* Left arrow */
+.modern-tooltip.tooltip-left::before {
+  right: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left-color: rgba(31, 41, 55, 0.95);
+}
+
+.modern-tooltip.tooltip-light.tooltip-left::before {
+  border-left-color: rgba(31, 41, 55, 0.95);
+}
+
+.modern-tooltip.tooltip-dark.tooltip-left::before {
+  border-left-color: rgba(31, 41, 55, 0.95);
+}
+
+/* Right arrow */
+.modern-tooltip.tooltip-right::before {
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-right-color: rgba(31, 41, 55, 0.95);
+}
+
+.modern-tooltip.tooltip-light.tooltip-right::before {
+  border-right-color: rgba(31, 41, 55, 0.95);
+}
+
+.modern-tooltip.tooltip-dark.tooltip-right::before {
+  border-right-color: rgba(31, 41, 55, 0.95);
+}
+
+/* Dark theme adjustments */
+.dark-theme .modern-tooltip.tooltip-light {
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.95) 0%, rgba(55, 65, 81, 0.95) 100%);
+  color: #f9fafb;
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .modern-tooltip.tooltip-light::before {
+  border-top-color: rgba(31, 41, 55, 0.95);
+  border-bottom-color: rgba(31, 41, 55, 0.95);
+  border-left-color: rgba(31, 41, 55, 0.95);
+  border-right-color: rgba(31, 41, 55, 0.95);
+}
+
+/* Hover effects for better interactivity */
+.modern-tooltip {
+  will-change: transform, opacity;
+}
+
+/* Enhanced animations */
+@keyframes tooltipFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modern-tooltip.tooltip-visible {
+  animation: tooltipFadeIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .modern-tooltip {
+    font-size: 12px;
+    padding: 8px 12px;
+    max-width: 180px;
+    border-radius: 10px;
+  }
+  
+  .modern-tooltip::before {
+    border-width: 6px;
+  }
+  
+  .modern-tooltip.tooltip-top::before {
+    bottom: -12px;
+  }
+  
+  .modern-tooltip.tooltip-bottom::before {
+    top: -12px;
+  }
+  
+  .modern-tooltip.tooltip-left::before {
+    right: -12px;
+  }
+  
+  .modern-tooltip.tooltip-right::before {
+    left: -12px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .modern-tooltip {
+    border-width: 2px;
+    font-weight: 700;
+  }
+  
+  .modern-tooltip.tooltip-light {
+    background: rgba(255, 255, 255, 1);
+    color: #000000;
+    border-color: #000000;
+  }
+  
+  .modern-tooltip.tooltip-dark {
+    background: rgba(0, 0, 0, 1);
+    color: #ffffff;
+    border-color: #ffffff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .modern-tooltip {
+    transition: opacity 0.1s ease;
+    transform: none;
+  }
+  
+  .modern-tooltip.tooltip-visible {
+    transform: none;
+    animation: none;
+  }
+}
+
+button:hover {
+  cursor: pointer !important;;   
+}
+
+button:disabled {
+  cursor: not-allowed !important;;   
+}

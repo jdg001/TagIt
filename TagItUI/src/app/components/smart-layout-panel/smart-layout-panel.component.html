@@ -1,0 +1,97 @@
+<div class="smart-layout-panel" [class.visible]="isVisible()" [class.minimized]="isMinimized">
+
+  <!-- Minimized State - Icon Only -->
+  @if (isMinimized) {
+  <div class="minimized-header">
+    <button class="minimized-icon-btn" (click)="toggleMinimize()" aria-label="Expand smart layout panel"
+      appTooltip="Expand Panel" tooltipPosition="bottom">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+      </svg>
+    </button>
+  </div>
+  }
+
+  <!-- Expanded State - Full Panel -->
+  @if (!isMinimized) {
+  <div class="expanded-content">
+    <div class="panel-header">
+      <div class="header-content">
+        <div class="header-title">
+          <svg class="header-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+          </svg>
+          <span class="panel-title">Smart Layout</span>
+        </div>
+        <button class="minimize-btn" (click)="toggleMinimize()" appTooltip="Minimize Panel" tooltipPosition="left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="panel-content">
+      <!-- Element Sticking -->
+      <div class="setting-group">
+        <div class="setting-header">
+          <span class="setting-title">Element Sticking</span>
+          <div class="toggle-container">
+            <label class="toggle">
+              <input type="checkbox" [checked]="settings.elementSticking" (change)="onToggleSetting('elementSticking')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <p class="setting-description">Elements automatically stick together when moved close to each other</p>
+      </div>
+      <!-- Row-wise Adjustment -->
+      <div class="setting-group">
+        <div class="setting-header">
+          <span class="setting-title">Row-wise Adjustment</span>
+          <div class="toggle-container">
+            <label class="toggle">
+              <input type="checkbox" [checked]="settings.rowWiseAdjustment"
+                (change)="onToggleSetting('rowWiseAdjustment')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <p class="setting-description">Elements in the same row adjust their widths and heights automatically</p>
+      </div>
+      <!-- Height-wise Adjustment -->
+      <div class="setting-group">
+        <div class="setting-header">
+          <span class="setting-title">Height-wise Adjustment</span>
+          <div class="toggle-container">
+            <label class="toggle">
+              <input type="checkbox" [checked]="settings.heightWiseAdjustment"
+                (change)="onToggleSetting('heightWiseAdjustment')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <p class="setting-description">Elements in the same column adjust their heights and widths automatically</p>
+      </div>
+      <!-- Alignment Lines -->
+      <div class="setting-group">
+        <div class="setting-header">
+          <span class="setting-title">Alignment Lines</span>
+          <div class="toggle-container">
+            <label class="toggle">
+              <input type="checkbox" [checked]="settings.alignmentLines" (change)="onToggleSetting('alignmentLines')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <p class="setting-description">Show dotted alignment lines when elements are positioned near each other</p>
+      </div>
+    </div>
+  </div>
+  }
+</div>

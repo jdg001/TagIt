@@ -1,0 +1,992 @@
+<!-- Canvas Area -->
+<main class="canvas-area" [class.edit-mode]="viewingMode.canEdit">
+  <!-- Zoom Controls -->
+  <div class="zoom-controls">
+    <button class="zoom-btn" (click)="zoomOut()" [disabled]="zoomLevel <= minZoom" title="Zoom Out">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5ZM6.5 10.5H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <span class="zoom-level">{{ getZoomPercentage() }}%</span>
+    <button class="zoom-btn" (click)="zoomIn()" [disabled]="zoomLevel >= maxZoom" title="Zoom In">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5ZM10.5 6.5V14.5M6.5 10.5H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <button class="zoom-btn reset" (click)="resetZoom()" title="Reset Zoom">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z" stroke="currentColor" stroke-width="2"/>
+        <path d="M12 8V12L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+
+
+  <div class="canvas-container"
+    [class.grouping-mode]="isGroupingMode"
+    (mousedown)="isGroupingMode ? onGroupingMouseDown($event) : null"
+    (mousemove)="isGroupingMode ? onGroupingMouseMove($event) : null"
+    (mouseup)="isGroupingMode ? onGroupingMouseUp($event) : null"
+    (contextmenu)="onCanvasRightClick($event)">
+    <!-- Rulers -->
+    <div class="ruler horizontal-ruler" tabindex="0">
+      <div class="ruler-marks">
+        @for (mark of horizontalMarks; track mark) {
+          <div
+            class="ruler-mark"
+            [class.major-mark]="mark.markType === 'major'"
+            [class.minor-mark]="mark.markType === 'minor'"
+            [class.sub-minor-mark]="mark.markType === 'sub-minor'"
+            [style.left.px]="snapPx(mark.position * viewScale) + phaseX"
+            (click)="onHorizontalRulerClick($event, mark)"
+            (mouseenter)="onHorizontalRulerHover($event, mark)"
+            (mouseleave)="onRulerMarkHoverOut()">
+          </div>
+        }
+      </div>
+      <!-- Click zones for easier targeting -->
+      <div class="ruler-click-zones">
+        @for (mark of horizontalMarks; track mark) {
+          <div
+            class="click-zone horizontal-click-zone"
+            [style.left.px]="snapPx(mark.position * viewScale) + phaseX"
+            (click)="onHorizontalRulerClick($event, mark)"
+            (mouseenter)="onHorizontalRulerHover($event, mark)"
+            (mouseleave)="onRulerMarkHoverOut()">
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="ruler vertical-ruler" tabindex="0">
+      <div class="ruler-marks">
+        @for (mark of verticalMarks; track mark) {
+          <div
+            class="ruler-mark"
+            [class.major-mark]="mark.markType === 'major'"
+            [class.minor-mark]="mark.markType === 'minor'"
+            [class.sub-minor-mark]="mark.markType === 'sub-minor'"
+            [style.top.px]="snapPx(mark.position * viewScale) + phaseY"
+            (click)="onVerticalRulerClick($event, mark)"
+            (mouseenter)="onVerticalRulerHover($event, mark)"
+            (mouseleave)="onRulerMarkHoverOut()">
+          </div>
+        }
+      </div>
+      <!-- Click zones for easier targeting -->
+      <div class="ruler-click-zones">
+        @for (mark of verticalMarks; track mark) {
+          <div
+            class="click-zone vertical-click-zone"
+            [style.top.px]="snapPx(mark.position * viewScale) + phaseY"
+            (click)="onVerticalRulerClick($event, mark)"
+            (mouseenter)="onVerticalRulerHover($event, mark)"
+            (mouseleave)="onRulerMarkHoverOut()">
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Ruler Intersection -->
+    <div class="ruler-intersection" tabindex="0"></div>
+
+
+    <!-- Grouping Selection Rectangle -->
+    @if (isGroupingMode && isSelecting && selectionRect) {
+      <div class="grouping-selection-rectangle"
+        [style.left.px]="selectionRect.x"
+        [style.top.px]="selectionRect.y"
+        [style.width.px]="selectionRect.width"
+        [style.height.px]="selectionRect.height">
+      </div>
+    }
+
+
+    <!-- Reference Lines -->
+    <div class="reference-lines">
+      <!-- Horizontal reference lines -->
+      @for (position of horizontalReferenceLines; track position) {
+        <div
+          class="reference-line horizontal-reference-line"
+          [style.top.px]="position">
+        </div>
+      }
+
+      <!-- Vertical reference lines -->
+      @for (position of verticalReferenceLines; track position) {
+        <div
+          class="reference-line vertical-reference-line"
+          [style.left.px]="position">
+        </div>
+      }
+
+      <!-- Hover preview line -->
+      @if (hoverPreviewLine) {
+        <div
+          class="reference-line preview-line"
+          [class.horizontal-reference-line]="hoverPreviewLine.type === 'horizontal'"
+          [class.vertical-reference-line]="hoverPreviewLine.type === 'vertical'"
+          [style.top.px]="hoverPreviewLine.type === 'horizontal' ? hoverPreviewLine.position : null"
+          [style.left.px]="hoverPreviewLine.type === 'vertical' ? hoverPreviewLine.position : null">
+        </div>
+      }
+    </div>
+
+    <!-- Canvas with Grid -->
+    <div class="canvas"
+      #canvas
+      (drop)="onCanvasDrop($event)"
+      (dragover)="onCanvasDragOver($event)"
+      (dragleave)="onCanvasDragLeave($event)"
+      (click)="onCanvasClick($event)"
+      (dblclick)="onCanvasDoubleClick($event)"
+      (contextmenu)="onCanvasRightClick($event)">
+
+      <!-- Grid Pattern -->
+      <svg class="grid-pattern" width="100%" height="100%" [style.transform]="'translate(' + phaseX + 'px,' + phaseY + 'px)'"
+        style="transform-origin: top left">
+        <defs>
+          <!-- Major grid lines (100px) -->
+          <pattern id="major-grid" width="100" height="100" patternUnits="userSpaceOnUse">
+            <path d="M 100 0 L 0 0 0 100" fill="none" stroke="var(--grid-major-color)" vector-effect="non-scaling-stroke" stroke-width="1" opacity="0.8"/>
+          </pattern>
+          <!-- Minor grid lines (50px) -->
+          <pattern id="minor-grid" width="50" height="50" patternUnits="userSpaceOnUse">
+            <path d="M 50 0 L 0 0 0 50" fill="none" stroke="var(--grid-minor-color)" vector-effect="non-scaling-stroke" stroke-width="0.5" opacity="0.6"/>
+          </pattern>
+          <!-- Sub-minor grid lines (10px) -->
+          <pattern id="sub-minor-grid" width="10" height="10" patternUnits="userSpaceOnUse">
+            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="var(--grid-sub-minor-color)" vector-effect="non-scaling-stroke" stroke-width="0.3" opacity="0.5"/>
+          </pattern>
+        </defs>
+        <!-- Layer the grid patterns -->
+        <rect width="100%" height="100%" fill="url(#sub-minor-grid)" />
+        <rect width="100%" height="100%" fill="url(#minor-grid)" />
+        <rect width="100%" height="100%" fill="url(#major-grid)" />
+      </svg>
+
+      <!-- Paper Layout Overlay -->
+      <div class="paper-layout"
+        [class.comment-mode]="isCommentMode"
+        [class.element-interaction-mode]="!isCommentMode && viewingMode.canEdit"
+        [style.width.px]="paperLayoutWidth"
+        [style.height.px]="paperLayoutHeight"
+        [style.left.px]="paperLayoutLeft"
+        [style.top.px]="paperLayoutTop"
+        [class.draggable]="!isGroupingMode && viewingMode.canMovePaper"
+        [class.resizable]="!isGroupingMode && viewingMode.canMovePaper"
+        (mousedown)="onPaperLayoutMouseDown($event)">
+        <div class="paper-border"></div>
+        <div class="paper-label">{{ selectedPaperSize }}</div>
+
+        <!-- Resize handles for all paper sizes -->
+        <div class="resize-handles">
+          <div class="resize-handle nw" (mousedown)="onPaperLayoutResizeStart($event, 'nw')"></div>
+          <div class="resize-handle ne" (mousedown)="onPaperLayoutResizeStart($event, 'ne')"></div>
+          <div class="resize-handle sw" (mousedown)="onPaperLayoutResizeStart($event, 'sw')"></div>
+          <div class="resize-handle se" (mousedown)="onPaperLayoutResizeStart($event, 'se')"></div>
+          <div class="resize-handle n" (mousedown)="onPaperLayoutResizeStart($event, 'n')"></div>
+          <div class="resize-handle s" (mousedown)="onPaperLayoutResizeStart($event, 's')"></div>
+          <div class="resize-handle w" (mousedown)="onPaperLayoutResizeStart($event, 'w')"></div>
+          <div class="resize-handle e" (mousedown)="onPaperLayoutResizeStart($event, 'e')"></div>
+        </div>
+
+        <!-- Comment Markers - Now inside paper layout -->
+        <div class="comment-markers" *ngIf="isCommentMode">
+          @for (comment of comments; track trackCommentBy($index, comment)) {
+            <div class="comment-marker-container" 
+                 [style.left.px]="comment.positionX - 16" 
+                 [style.top.px]="comment.positionY - 16">
+              
+              <!-- Comment Marker -->
+              <div class="comment-marker" 
+                   (mouseenter)="showCommentTooltip(comment, $event)"
+                   (mouseleave)="hideCommentTooltip()"
+                   appTooltip="{{ comment.commentText }}" 
+                   tooltipPosition="auto">
+                <div class="marker-icon">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                @if (!comment.isResolved) {
+                  <div class="marker-badge"></div>
+                }
+              </div>
+
+              <!-- Action Buttons (shown on hover) -->
+              <div class="comment-actions">
+                @if (canResolveComments) {
+                  <!-- Designer Mode: Show Resolve Button (only for unresolved comments) -->
+                  @if (!comment.isResolved) {
+                    <button class="action-btn resolve-btn" 
+                            (click)="resolveComment(comment); $event.stopPropagation()"
+                            appTooltip="Resolve comment" 
+                            tooltipPosition="top">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  }
+                } @else {
+                  <!-- Reviewer Mode: Show Edit and Delete Buttons (only for unresolved comments) -->
+                  @if (!comment.isResolved) {
+                    <button class="action-btn edit-btn" 
+                            (click)="editComment(comment); $event.stopPropagation()"
+                            appTooltip="Edit comment" 
+                            tooltipPosition="top">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13M18.5 2.5C18.8978 2.10218 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10218 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10218 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <button class="action-btn delete-btn" 
+                            (click)="deleteComment(comment.commentId); $event.stopPropagation()"
+                            appTooltip="Delete comment" 
+                            tooltipPosition="top">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Canvas Elements -->
+      @for (element of canvasElements; track trackElement($index, element)) {
+        <div
+          class="canvas-element"
+          [attr.data-element-id]="element.id"
+          [class.selected]="element.id === selectedElement?.id"
+          [class.resizing]="element.id === selectedElement?.id && isResizing"
+          [class.inside-paper]="isElementInsidePaper(element)"
+          [class.completely-inside-paper]="isElementCompletelyInsidePaper(element)"
+          [class.line-element-wrapper]="element.type === 'line'"
+          [class.grouped]="isElementGrouped(element.id)"
+          [style.--group-color]="getElementGroupColor(element.id)"
+          [class.hovered]="element.id === hoveredElementId"
+          [class.fixed-element]="!viewingMode.canEdit"
+          [class.bubble-animation]="isElementBubbleAnimating(element.id)"
+          [class.delete-animation]="isElementDeleting(element.id)"
+          [class.bring-to-front-animation]="isElementBringingToFront(element.id)"
+          [class.line-orientation-animation]="isElementLineOrientationAnimating(element.id)"
+          [style.left.px]="element.x"
+          [style.top.px]="element.y"
+          [style.width.px]="element.type === 'line' && (element.lineAngle || 0) === 90 ? element.height : element.width"
+          [style.height.px]="element.type === 'line' && (element.lineAngle || 0) === 90 ? element.width : element.height"
+          [style.transform]="element.type === 'line' ? 'rotate(' + (element.lineAngle || 0) + 'deg)' : null"
+          [style.transform-origin]="element.type === 'line' ? '0 50%' : null"
+          (mousedown)="viewingMode.canEdit ? startDrag(element, $event) : null"
+          (contextmenu)="viewingMode.canEdit ? onElementContextMenu(element, $event) : null">
+          <!-- Text Element -->
+          @if (element.type === 'text') {
+            <div
+              class="text-element"
+              [style.font-size.px]="element.fontSize"
+              [style.font-family]="element.fontFamily || 'Arial'"
+              [style.color]="element.color">
+              {{element.content}}
+            </div>
+          }
+          <!-- Textarea Element -->
+          @if (element.type === 'textarea') {
+            <div
+              class="textarea-element"
+              [style.font-size.px]="element.fontSize"
+              [style.font-family]="element.fontFamily || 'Arial'"
+              [style.color]="element.color"
+              [style.background-color]="'transparent'"
+              [style.border]="'none'"
+              [style.padding]="'4px'"
+              [style.box-sizing]="'border-box'"
+              [style.white-space]="'pre-wrap'"
+              [style.overflow]="'hidden'"
+              [style.resize]="'none'"
+              [style.outline]="'none'">
+              {{element.content}}
+            </div>
+          }
+          <!-- Rectangle Element -->
+          @if (element.type === 'rectangle') {
+            <div
+              class="rectangle-element"
+              [style.background-color]="element.fillColor"
+              [style.border-color]="element.borderColor"
+              [style.border-width.px]="element.borderWidth">
+            </div>
+          }
+          <!-- Barcode Element -->
+          @if (element.type === 'barcode') {
+            <div
+              class="barcode-element"
+              [style.width.px]="element.width"
+              [style.height.px]="element.height">
+              <!-- Placeholder barcode pattern -->
+              <svg class="barcode-svg"
+                [attr.width]="element.width"
+                [attr.height]="element.height"
+                viewBox="8 0 184 55"
+                preserveAspectRatio="xMidYMid meet">
+                <!-- Barcode bars - placeholder pattern -->
+                <rect x="10" y="5" width="2" height="50" fill="black"/>
+                <rect x="13" y="5" width="1" height="50" fill="black"/>
+                <rect x="15" y="5" width="3" height="50" fill="black"/>
+                <rect x="19" y="5" width="1" height="50" fill="black"/>
+                <rect x="21" y="5" width="2" height="50" fill="black"/>
+                <rect x="24" y="5" width="1" height="50" fill="black"/>
+                <rect x="26" y="5" width="1" height="50" fill="black"/>
+                <rect x="28" y="5" width="2" height="50" fill="black"/>
+                <rect x="31" y="5" width="1" height="50" fill="black"/>
+                <rect x="33" y="5" width="3" height="50" fill="black"/>
+                <rect x="37" y="5" width="1" height="50" fill="black"/>
+                <rect x="39" y="5" width="2" height="50" fill="black"/>
+                <rect x="42" y="5" width="1" height="50" fill="black"/>
+                <rect x="44" y="5" width="1" height="50" fill="black"/>
+                <rect x="46" y="5" width="2" height="50" fill="black"/>
+                <rect x="49" y="5" width="1" height="50" fill="black"/>
+                <rect x="51" y="5" width="3" height="50" fill="black"/>
+                <rect x="55" y="5" width="1" height="50" fill="black"/>
+                <rect x="57" y="5" width="2" height="50" fill="black"/>
+                <rect x="60" y="5" width="1" height="50" fill="black"/>
+                <rect x="62" y="5" width="1" height="50" fill="black"/>
+                <rect x="64" y="5" width="2" height="50" fill="black"/>
+                <rect x="67" y="5" width="1" height="50" fill="black"/>
+                <rect x="69" y="5" width="3" height="50" fill="black"/>
+                <rect x="73" y="5" width="1" height="50" fill="black"/>
+                <rect x="75" y="5" width="2" height="50" fill="black"/>
+                <rect x="78" y="5" width="1" height="50" fill="black"/>
+                <rect x="80" y="5" width="1" height="50" fill="black"/>
+                <rect x="82" y="5" width="2" height="50" fill="black"/>
+                <rect x="85" y="5" width="1" height="50" fill="black"/>
+                <rect x="87" y="5" width="3" height="50" fill="black"/>
+                <rect x="91" y="5" width="1" height="50" fill="black"/>
+                <rect x="93" y="5" width="2" height="50" fill="black"/>
+                <rect x="96" y="5" width="1" height="50" fill="black"/>
+                <rect x="98" y="5" width="1" height="50" fill="black"/>
+                <rect x="100" y="5" width="2" height="50" fill="black"/>
+                <rect x="103" y="5" width="1" height="50" fill="black"/>
+                <rect x="105" y="5" width="3" height="50" fill="black"/>
+                <rect x="109" y="5" width="1" height="50" fill="black"/>
+                <rect x="111" y="5" width="2" height="50" fill="black"/>
+                <rect x="114" y="5" width="1" height="50" fill="black"/>
+                <rect x="116" y="5" width="1" height="50" fill="black"/>
+                <rect x="118" y="5" width="2" height="50" fill="black"/>
+                <rect x="121" y="5" width="1" height="50" fill="black"/>
+                <rect x="123" y="5" width="3" height="50" fill="black"/>
+                <rect x="127" y="5" width="1" height="50" fill="black"/>
+                <rect x="129" y="5" width="2" height="50" fill="black"/>
+                <rect x="132" y="5" width="1" height="50" fill="black"/>
+                <rect x="134" y="5" width="1" height="50" fill="black"/>
+                <rect x="136" y="5" width="2" height="50" fill="black"/>
+                <rect x="139" y="5" width="1" height="50" fill="black"/>
+                <rect x="141" y="5" width="3" height="50" fill="black"/>
+                <rect x="145" y="5" width="1" height="50" fill="black"/>
+                <rect x="147" y="5" width="2" height="50" fill="black"/>
+                <rect x="150" y="5" width="1" height="50" fill="black"/>
+                <rect x="152" y="5" width="1" height="50" fill="black"/>
+                <rect x="154" y="5" width="2" height="50" fill="black"/>
+                <rect x="157" y="5" width="1" height="50" fill="black"/>
+                <rect x="159" y="5" width="3" height="50" fill="black"/>
+                <rect x="163" y="5" width="1" height="50" fill="black"/>
+                <rect x="165" y="5" width="2" height="50" fill="black"/>
+                <rect x="168" y="5" width="1" height="50" fill="black"/>
+                <rect x="170" y="5" width="1" height="50" fill="black"/>
+                <rect x="172" y="5" width="2" height="50" fill="black"/>
+                <rect x="175" y="5" width="1" height="50" fill="black"/>
+                <rect x="177" y="5" width="3" height="50" fill="black"/>
+                <rect x="181" y="5" width="1" height="50" fill="black"/>
+                <rect x="183" y="5" width="2" height="50" fill="black"/>
+                <rect x="186" y="5" width="1" height="50" fill="black"/>
+                <rect x="188" y="5" width="1" height="50" fill="black"/>
+                <rect x="190" y="5" width="2" height="50" fill="black"/>
+              </svg>
+              <!-- Show placeholder text -->
+              <div class="barcode-placeholder-text">
+                {{ getBarcodeData(element) }}
+              </div>
+            </div>
+          }
+          <!-- QR Code Element -->
+          @if (element.type === 'qr') {
+            <div
+              class="qr-element"
+              [style.width.px]="element.width"
+              [style.height.px]="element.height">
+              <!-- Placeholder QR code pattern -->
+              <svg class="qr-svg"
+                [attr.width]="element.width"
+                [attr.height]="element.height"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="xMidYMid meet">
+                <!-- QR code pattern - placeholder squares -->
+                <!-- Top-left finder pattern -->
+                <rect x="5" y="5" width="15" height="15" fill="black"/>
+                <rect x="7" y="7" width="11" height="11" fill="white"/>
+                <rect x="9" y="9" width="7" height="7" fill="black"/>
+                <!-- Top-right finder pattern -->
+                <rect x="80" y="5" width="15" height="15" fill="black"/>
+                <rect x="82" y="7" width="11" height="11" fill="white"/>
+                <rect x="84" y="9" width="7" height="7" fill="black"/>
+                <!-- Bottom-left finder pattern -->
+                <rect x="5" y="80" width="15" height="15" fill="black"/>
+                <rect x="7" y="82" width="11" height="11" fill="white"/>
+                <rect x="9" y="84" width="7" height="7" fill="black"/>
+                <!-- Data modules - random pattern for placeholder -->
+                <rect x="25" y="5" width="3" height="3" fill="black"/>
+                <rect x="30" y="5" width="3" height="3" fill="black"/>
+                <rect x="35" y="5" width="3" height="3" fill="black"/>
+                <rect x="40" y="5" width="3" height="3" fill="black"/>
+                <rect x="45" y="5" width="3" height="3" fill="black"/>
+                <rect x="50" y="5" width="3" height="3" fill="black"/>
+                <rect x="55" y="5" width="3" height="3" fill="black"/>
+                <rect x="60" y="5" width="3" height="3" fill="black"/>
+                <rect x="65" y="5" width="3" height="3" fill="black"/>
+                <rect x="70" y="5" width="3" height="3" fill="black"/>
+                <rect x="75" y="5" width="3" height="3" fill="black"/>
+                <rect x="5" y="25" width="3" height="3" fill="black"/>
+                <rect x="10" y="25" width="3" height="3" fill="black"/>
+                <rect x="15" y="25" width="3" height="3" fill="black"/>
+                <rect x="20" y="25" width="3" height="3" fill="black"/>
+                <rect x="25" y="25" width="3" height="3" fill="black"/>
+                <rect x="30" y="25" width="3" height="3" fill="black"/>
+                <rect x="35" y="25" width="3" height="3" fill="black"/>
+                <rect x="40" y="25" width="3" height="3" fill="black"/>
+                <rect x="45" y="25" width="3" height="3" fill="black"/>
+                <rect x="50" y="25" width="3" height="3" fill="black"/>
+                <rect x="55" y="25" width="3" height="3" fill="black"/>
+                <rect x="60" y="25" width="3" height="3" fill="black"/>
+                <rect x="65" y="25" width="3" height="3" fill="black"/>
+                <rect x="70" y="25" width="3" height="3" fill="black"/>
+                <rect x="75" y="25" width="3" height="3" fill="black"/>
+                <rect x="25" y="30" width="3" height="3" fill="black"/>
+                <rect x="30" y="30" width="3" height="3" fill="black"/>
+                <rect x="35" y="30" width="3" height="3" fill="black"/>
+                <rect x="40" y="30" width="3" height="3" fill="black"/>
+                <rect x="45" y="30" width="3" height="3" fill="black"/>
+                <rect x="50" y="30" width="3" height="3" fill="black"/>
+                <rect x="55" y="30" width="3" height="3" fill="black"/>
+                <rect x="60" y="30" width="3" height="3" fill="black"/>
+                <rect x="65" y="30" width="3" height="3" fill="black"/>
+                <rect x="70" y="30" width="3" height="3" fill="black"/>
+                <rect x="75" y="30" width="3" height="3" fill="black"/>
+                <rect x="25" y="35" width="3" height="3" fill="black"/>
+                <rect x="30" y="35" width="3" height="3" fill="black"/>
+                <rect x="35" y="35" width="3" height="3" fill="black"/>
+                <rect x="40" y="35" width="3" height="3" fill="black"/>
+                <rect x="45" y="35" width="3" height="3" fill="black"/>
+                <rect x="50" y="35" width="3" height="3" fill="black"/>
+                <rect x="55" y="35" width="3" height="3" fill="black"/>
+                <rect x="60" y="35" width="3" height="3" fill="black"/>
+                <rect x="65" y="35" width="3" height="3" fill="black"/>
+                <rect x="70" y="35" width="3" height="3" fill="black"/>
+                <rect x="75" y="35" width="3" height="3" fill="black"/>
+                <rect x="25" y="40" width="3" height="3" fill="black"/>
+                <rect x="30" y="40" width="3" height="3" fill="black"/>
+                <rect x="35" y="40" width="3" height="3" fill="black"/>
+                <rect x="40" y="40" width="3" height="3" fill="black"/>
+                <rect x="45" y="40" width="3" height="3" fill="black"/>
+                <rect x="50" y="40" width="3" height="3" fill="black"/>
+                <rect x="55" y="40" width="3" height="3" fill="black"/>
+                <rect x="60" y="40" width="3" height="3" fill="black"/>
+                <rect x="65" y="40" width="3" height="3" fill="black"/>
+                <rect x="70" y="40" width="3" height="3" fill="black"/>
+                <rect x="75" y="40" width="3" height="3" fill="black"/>
+                <rect x="25" y="45" width="3" height="3" fill="black"/>
+                <rect x="30" y="45" width="3" height="3" fill="black"/>
+                <rect x="35" y="45" width="3" height="3" fill="black"/>
+                <rect x="40" y="45" width="3" height="3" fill="black"/>
+                <rect x="45" y="45" width="3" height="3" fill="black"/>
+                <rect x="50" y="45" width="3" height="3" fill="black"/>
+                <rect x="55" y="45" width="3" height="3" fill="black"/>
+                <rect x="60" y="45" width="3" height="3" fill="black"/>
+                <rect x="65" y="45" width="3" height="3" fill="black"/>
+                <rect x="70" y="45" width="3" height="3" fill="black"/>
+                <rect x="75" y="45" width="3" height="3" fill="black"/>
+                <rect x="25" y="50" width="3" height="3" fill="black"/>
+                <rect x="30" y="50" width="3" height="3" fill="black"/>
+                <rect x="35" y="50" width="3" height="3" fill="black"/>
+                <rect x="40" y="50" width="3" height="3" fill="black"/>
+                <rect x="45" y="50" width="3" height="3" fill="black"/>
+                <rect x="50" y="50" width="3" height="3" fill="black"/>
+                <rect x="55" y="50" width="3" height="3" fill="black"/>
+                <rect x="60" y="50" width="3" height="3" fill="black"/>
+                <rect x="65" y="50" width="3" height="3" fill="black"/>
+                <rect x="70" y="50" width="3" height="3" fill="black"/>
+                <rect x="75" y="50" width="3" height="3" fill="black"/>
+                <rect x="25" y="55" width="3" height="3" fill="black"/>
+                <rect x="30" y="55" width="3" height="3" fill="black"/>
+                <rect x="35" y="55" width="3" height="3" fill="black"/>
+                <rect x="40" y="55" width="3" height="3" fill="black"/>
+                <rect x="45" y="55" width="3" height="3" fill="black"/>
+                <rect x="50" y="55" width="3" height="3" fill="black"/>
+                <rect x="55" y="55" width="3" height="3" fill="black"/>
+                <rect x="60" y="55" width="3" height="3" fill="black"/>
+                <rect x="65" y="55" width="3" height="3" fill="black"/>
+                <rect x="70" y="55" width="3" height="3" fill="black"/>
+                <rect x="75" y="55" width="3" height="3" fill="black"/>
+                <rect x="25" y="60" width="3" height="3" fill="black"/>
+                <rect x="30" y="60" width="3" height="3" fill="black"/>
+                <rect x="35" y="60" width="3" height="3" fill="black"/>
+                <rect x="40" y="60" width="3" height="3" fill="black"/>
+                <rect x="45" y="60" width="3" height="3" fill="black"/>
+                <rect x="50" y="60" width="3" height="3" fill="black"/>
+                <rect x="55" y="60" width="3" height="3" fill="black"/>
+                <rect x="60" y="60" width="3" height="3" fill="black"/>
+                <rect x="65" y="60" width="3" height="3" fill="black"/>
+                <rect x="70" y="60" width="3" height="3" fill="black"/>
+                <rect x="75" y="60" width="3" height="3" fill="black"/>
+                <rect x="25" y="65" width="3" height="3" fill="black"/>
+                <rect x="30" y="65" width="3" height="3" fill="black"/>
+                <rect x="35" y="65" width="3" height="3" fill="black"/>
+                <rect x="40" y="65" width="3" height="3" fill="black"/>
+                <rect x="45" y="65" width="3" height="3" fill="black"/>
+                <rect x="50" y="65" width="3" height="3" fill="black"/>
+                <rect x="55" y="65" width="3" height="3" fill="black"/>
+                <rect x="60" y="65" width="3" height="3" fill="black"/>
+                <rect x="65" y="65" width="3" height="3" fill="black"/>
+                <rect x="70" y="65" width="3" height="3" fill="black"/>
+                <rect x="75" y="65" width="3" height="3" fill="black"/>
+                <rect x="25" y="70" width="3" height="3" fill="black"/>
+                <rect x="30" y="70" width="3" height="3" fill="black"/>
+                <rect x="35" y="70" width="3" height="3" fill="black"/>
+                <rect x="40" y="70" width="3" height="3" fill="black"/>
+                <rect x="45" y="70" width="3" height="3" fill="black"/>
+                <rect x="50" y="70" width="3" height="3" fill="black"/>
+                <rect x="55" y="70" width="3" height="3" fill="black"/>
+                <rect x="60" y="70" width="3" height="3" fill="black"/>
+                <rect x="65" y="70" width="3" height="3" fill="black"/>
+                <rect x="70" y="70" width="3" height="3" fill="black"/>
+                <rect x="75" y="70" width="3" height="3" fill="black"/>
+                <rect x="25" y="75" width="3" height="3" fill="black"/>
+                <rect x="30" y="75" width="3" height="3" fill="black"/>
+                <rect x="35" y="75" width="3" height="3" fill="black"/>
+                <rect x="40" y="75" width="3" height="3" fill="black"/>
+                <rect x="45" y="75" width="3" height="3" fill="black"/>
+                <rect x="50" y="75" width="3" height="3" fill="black"/>
+                <rect x="55" y="75" width="3" height="3" fill="black"/>
+                <rect x="60" y="75" width="3" height="3" fill="black"/>
+                <rect x="65" y="75" width="3" height="3" fill="black"/>
+                <rect x="70" y="75" width="3" height="3" fill="black"/>
+                <rect x="75" y="75" width="3" height="3" fill="black"/>
+                <rect x="5" y="25" width="3" height="3" fill="black"/>
+                <rect x="10" y="25" width="3" height="3" fill="black"/>
+                <rect x="15" y="25" width="3" height="3" fill="black"/>
+                <rect x="20" y="25" width="3" height="3" fill="black"/>
+                <rect x="5" y="30" width="3" height="3" fill="black"/>
+                <rect x="10" y="30" width="3" height="3" fill="black"/>
+                <rect x="15" y="30" width="3" height="3" fill="black"/>
+                <rect x="20" y="30" width="3" height="3" fill="black"/>
+                <rect x="5" y="35" width="3" height="3" fill="black"/>
+                <rect x="10" y="35" width="3" height="3" fill="black"/>
+                <rect x="15" y="35" width="3" height="3" fill="black"/>
+                <rect x="20" y="35" width="3" height="3" fill="black"/>
+                <rect x="5" y="40" width="3" height="3" fill="black"/>
+                <rect x="10" y="40" width="3" height="3" fill="black"/>
+                <rect x="15" y="40" width="3" height="3" fill="black"/>
+                <rect x="20" y="40" width="3" height="3" fill="black"/>
+                <rect x="5" y="45" width="3" height="3" fill="black"/>
+                <rect x="10" y="45" width="3" height="3" fill="black"/>
+                <rect x="15" y="45" width="3" height="3" fill="black"/>
+                <rect x="20" y="45" width="3" height="3" fill="black"/>
+                <rect x="5" y="50" width="3" height="3" fill="black"/>
+                <rect x="10" y="50" width="3" height="3" fill="black"/>
+                <rect x="15" y="50" width="3" height="3" fill="black"/>
+                <rect x="20" y="50" width="3" height="3" fill="black"/>
+                <rect x="5" y="55" width="3" height="3" fill="black"/>
+                <rect x="10" y="55" width="3" height="3" fill="black"/>
+                <rect x="15" y="55" width="3" height="3" fill="black"/>
+                <rect x="20" y="55" width="3" height="3" fill="black"/>
+                <rect x="5" y="60" width="3" height="3" fill="black"/>
+                <rect x="10" y="60" width="3" height="3" fill="black"/>
+                <rect x="15" y="60" width="3" height="3" fill="black"/>
+                <rect x="20" y="60" width="3" height="3" fill="black"/>
+                <rect x="5" y="65" width="3" height="3" fill="black"/>
+                <rect x="10" y="65" width="3" height="3" fill="black"/>
+                <rect x="15" y="65" width="3" height="3" fill="black"/>
+                <rect x="20" y="65" width="3" height="3" fill="black"/>
+                <rect x="5" y="70" width="3" height="3" fill="black"/>
+                <rect x="10" y="70" width="3" height="3" fill="black"/>
+                <rect x="15" y="70" width="3" height="3" fill="black"/>
+                <rect x="20" y="70" width="3" height="3" fill="black"/>
+                <rect x="5" y="75" width="3" height="3" fill="black"/>
+                <rect x="10" y="75" width="3" height="3" fill="black"/>
+                <rect x="15" y="75" width="3" height="3" fill="black"/>
+                <rect x="20" y="75" width="3" height="3" fill="black"/>
+                <rect x="80" y="25" width="3" height="3" fill="black"/>
+                <rect x="85" y="25" width="3" height="3" fill="black"/>
+                <rect x="90" y="25" width="3" height="3" fill="black"/>
+                <rect x="95" y="25" width="3" height="3" fill="black"/>
+                <rect x="80" y="30" width="3" height="3" fill="black"/>
+                <rect x="85" y="30" width="3" height="3" fill="black"/>
+                <rect x="90" y="30" width="3" height="3" fill="black"/>
+                <rect x="95" y="30" width="3" height="3" fill="black"/>
+                <rect x="80" y="35" width="3" height="3" fill="black"/>
+                <rect x="85" y="35" width="3" height="3" fill="black"/>
+                <rect x="90" y="35" width="3" height="3" fill="black"/>
+                <rect x="95" y="35" width="3" height="3" fill="black"/>
+                <rect x="80" y="40" width="3" height="3" fill="black"/>
+                <rect x="85" y="40" width="3" height="3" fill="black"/>
+                <rect x="90" y="40" width="3" height="3" fill="black"/>
+                <rect x="95" y="40" width="3" height="3" fill="black"/>
+                <rect x="80" y="45" width="3" height="3" fill="black"/>
+                <rect x="85" y="45" width="3" height="3" fill="black"/>
+                <rect x="90" y="45" width="3" height="3" fill="black"/>
+                <rect x="95" y="45" width="3" height="3" fill="black"/>
+                <rect x="80" y="50" width="3" height="3" fill="black"/>
+                <rect x="85" y="50" width="3" height="3" fill="black"/>
+                <rect x="90" y="50" width="3" height="3" fill="black"/>
+                <rect x="95" y="50" width="3" height="3" fill="black"/>
+                <rect x="80" y="55" width="3" height="3" fill="black"/>
+                <rect x="85" y="55" width="3" height="3" fill="black"/>
+                <rect x="90" y="55" width="3" height="3" fill="black"/>
+                <rect x="95" y="55" width="3" height="3" fill="black"/>
+                <rect x="80" y="60" width="3" height="3" fill="black"/>
+                <rect x="85" y="60" width="3" height="3" fill="black"/>
+                <rect x="90" y="60" width="3" height="3" fill="black"/>
+                <rect x="95" y="60" width="3" height="3" fill="black"/>
+                <rect x="80" y="65" width="3" height="3" fill="black"/>
+                <rect x="85" y="65" width="3" height="3" fill="black"/>
+                <rect x="90" y="65" width="3" height="3" fill="black"/>
+                <rect x="95" y="65" width="3" height="3" fill="black"/>
+                <rect x="80" y="70" width="3" height="3" fill="black"/>
+                <rect x="85" y="70" width="3" height="3" fill="black"/>
+                <rect x="90" y="70" width="3" height="3" fill="black"/>
+                <rect x="95" y="70" width="3" height="3" fill="black"/>
+                <rect x="80" y="75" width="3" height="3" fill="black"/>
+                <rect x="85" y="75" width="3" height="3" fill="black"/>
+                <rect x="90" y="75" width="3" height="3" fill="black"/>
+                <rect x="95" y="75" width="3" height="3" fill="black"/>
+                <rect x="5" y="80" width="3" height="3" fill="black"/>
+                <rect x="10" y="80" width="3" height="3" fill="black"/>
+                <rect x="15" y="80" width="3" height="3" fill="black"/>
+                <rect x="20" y="80" width="3" height="3" fill="black"/>
+                <rect x="25" y="80" width="3" height="3" fill="black"/>
+                <rect x="30" y="80" width="3" height="3" fill="black"/>
+                <rect x="35" y="80" width="3" height="3" fill="black"/>
+                <rect x="40" y="80" width="3" height="3" fill="black"/>
+                <rect x="45" y="80" width="3" height="3" fill="black"/>
+                <rect x="50" y="80" width="3" height="3" fill="black"/>
+                <rect x="55" y="80" width="3" height="3" fill="black"/>
+                <rect x="60" y="80" width="3" height="3" fill="black"/>
+                <rect x="65" y="80" width="3" height="3" fill="black"/>
+                <rect x="70" y="80" width="3" height="3" fill="black"/>
+                <rect x="75" y="80" width="3" height="3" fill="black"/>
+                <rect x="80" y="80" width="3" height="3" fill="black"/>
+                <rect x="85" y="80" width="3" height="3" fill="black"/>
+                <rect x="90" y="80" width="3" height="3" fill="black"/>
+                <rect x="95" y="80" width="3" height="3" fill="black"/>
+                <rect x="5" y="85" width="3" height="3" fill="black"/>
+                <rect x="10" y="85" width="3" height="3" fill="black"/>
+                <rect x="15" y="85" width="3" height="3" fill="black"/>
+                <rect x="20" y="85" width="3" height="3" fill="black"/>
+                <rect x="25" y="85" width="3" height="3" fill="black"/>
+                <rect x="30" y="85" width="3" height="3" fill="black"/>
+                <rect x="35" y="85" width="3" height="3" fill="black"/>
+                <rect x="40" y="85" width="3" height="3" fill="black"/>
+                <rect x="45" y="85" width="3" height="3" fill="black"/>
+                <rect x="50" y="85" width="3" height="3" fill="black"/>
+                <rect x="55" y="85" width="3" height="3" fill="black"/>
+                <rect x="60" y="85" width="3" height="3" fill="black"/>
+                <rect x="65" y="85" width="3" height="3" fill="black"/>
+                <rect x="70" y="85" width="3" height="3" fill="black"/>
+                <rect x="75" y="85" width="3" height="3" fill="black"/>
+                <rect x="80" y="85" width="3" height="3" fill="black"/>
+                <rect x="85" y="85" width="3" height="3" fill="black"/>
+                <rect x="90" y="85" width="3" height="3" fill="black"/>
+                <rect x="95" y="85" width="3" height="3" fill="black"/>
+                <rect x="5" y="90" width="3" height="3" fill="black"/>
+                <rect x="10" y="90" width="3" height="3" fill="black"/>
+                <rect x="15" y="90" width="3" height="3" fill="black"/>
+                <rect x="20" y="90" width="3" height="3" fill="black"/>
+                <rect x="25" y="90" width="3" height="3" fill="black"/>
+                <rect x="30" y="90" width="3" height="3" fill="black"/>
+                <rect x="35" y="90" width="3" height="3" fill="black"/>
+                <rect x="40" y="90" width="3" height="3" fill="black"/>
+                <rect x="45" y="90" width="3" height="3" fill="black"/>
+                <rect x="50" y="90" width="3" height="3" fill="black"/>
+                <rect x="55" y="90" width="3" height="3" fill="black"/>
+                <rect x="60" y="90" width="3" height="3" fill="black"/>
+                <rect x="65" y="90" width="3" height="3" fill="black"/>
+                <rect x="70" y="90" width="3" height="3" fill="black"/>
+                <rect x="75" y="90" width="3" height="3" fill="black"/>
+                <rect x="80" y="90" width="3" height="3" fill="black"/>
+                <rect x="85" y="90" width="3" height="3" fill="black"/>
+                <rect x="90" y="90" width="3" height="3" fill="black"/>
+                <rect x="95" y="90" width="3" height="3" fill="black"/>
+                <rect x="5" y="95" width="3" height="3" fill="black"/>
+                <rect x="10" y="95" width="3" height="3" fill="black"/>
+                <rect x="15" y="95" width="3" height="3" fill="black"/>
+                <rect x="20" y="95" width="3" height="3" fill="black"/>
+                <rect x="25" y="95" width="3" height="3" fill="black"/>
+                <rect x="30" y="95" width="3" height="3" fill="black"/>
+                <rect x="35" y="95" width="3" height="3" fill="black"/>
+                <rect x="40" y="95" width="3" height="3" fill="black"/>
+                <rect x="45" y="95" width="3" height="3" fill="black"/>
+                <rect x="50" y="95" width="3" height="3" fill="black"/>
+                <rect x="55" y="95" width="3" height="3" fill="black"/>
+                <rect x="60" y="95" width="3" height="3" fill="black"/>
+                <rect x="65" y="95" width="3" height="3" fill="black"/>
+                <rect x="70" y="95" width="3" height="3" fill="black"/>
+                <rect x="75" y="95" width="3" height="3" fill="black"/>
+                <rect x="80" y="95" width="3" height="3" fill="black"/>
+                <rect x="85" y="95" width="3" height="3" fill="black"/>
+                <rect x="90" y="95" width="3" height="3" fill="black"/>
+                <rect x="95" y="95" width="3" height="3" fill="black"/>
+              </svg>
+              <!-- Show placeholder text -->
+              <div class="qr-placeholder-text">
+                {{ getQrData(element) }}
+              </div>
+            </div>
+          }
+          <!-- Line Element -->
+          @if (element.type === 'line') {
+            <div
+              class="line-element"
+              [style.width.px]="element.lineLength || 100"
+              [style.height.px]="getMaxValue(8, (element.lineWidth || 2) + 6)">
+              <svg class="line-svg"
+                [attr.width]="element.lineLength || 100"
+                [attr.height]="getMaxValue(8, (element.lineWidth || 2) + 6)"
+                viewBox="0 0 100 8"
+                preserveAspectRatio="none">
+                <line x1="0" y1="4"
+                  x2="100" y2="4"
+                  [attr.stroke]="element.lineColor || '#000000'"
+                  [attr.stroke-width]="element.lineWidth || 2"
+                  stroke-linecap="round"/>
+                </svg>
+              </div>
+            }
+            <!-- Image Element -->
+            @if (element.type === 'image') {
+              <div
+                class="image-element"
+                [style.width.px]="element.width"
+                [style.height.px]="element.height">
+                @if (element.imageSrc) {
+                  <div class="image-container">
+                    <img [src]="element.imageSrc"
+                      [alt]="element.imageName || 'Image'"
+                      [style.width.px]="element.width"
+                      [style.height.px]="element.height"
+                      style="object-fit: contain; border-radius: 4px;"/>
+                    </div>
+                  }
+                  @if (!element.imageSrc) {
+                    <div class="image-placeholder">
+                      <svg class="image-placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                        <path d="M21 15L16 10L5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span class="image-placeholder-text">{{ element.imageName || 'No image selected' }}</span>
+                    </div>
+                  }
+                </div>
+              }
+              <!-- Resize Handles - Only show in edit mode -->
+              @if (element.id === selectedElement?.id && viewingMode.canEdit) {
+                <div class="resize-handles">
+                  <!-- Standard resize handles for non-line elements -->
+                  @if (element.type !== 'line') {
+                    <div class="resize-handle nw" (mousedown)="startResize(element, 'nw', $event)"></div>
+                  }
+                  @if (element.type !== 'line') {
+                    <div class="resize-handle ne" (mousedown)="startResize(element, 'ne', $event)"></div>
+                  }
+                  @if (element.type !== 'line') {
+                    <div class="resize-handle sw" (mousedown)="startResize(element, 'sw', $event)"></div>
+                  }
+                  @if (element.type !== 'line') {
+                    <div class="resize-handle se" (mousedown)="startResize(element, 'se', $event)"></div>
+                  }
+                  <!-- Line-specific resize handles (only east and west) -->
+                  @if (element.type === 'line') {
+                    <div class="resize-handle w" (mousedown)="startResize(element, 'w', $event)"></div>
+                  }
+                  @if (element.type === 'line') {
+                    <div class="resize-handle e" (mousedown)="startResize(element, 'e', $event)"></div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </main>
+
+    <!-- Placeholder Input Dialog -->
+    @if (showPlaceholderDialog) {
+      <div class="placeholder-input-dialog-overlay" (click)="onPlaceholderDialogClose()">
+        <div class="placeholder-input-dialog" (click)="$event.stopPropagation()">
+          <div class="dialog-header">
+            <h3>Convert to Placeholder</h3>
+            <button class="close-btn" (click)="onPlaceholderDialogClose()">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <div class="dialog-content">
+            <p>Enter a placeholder name for this element:</p>
+            <input
+              type="text"
+              #placeholderInput
+              placeholder="e.g., productName, price, date..."
+              class="placeholder-input"
+              (keyup.enter)="onPlaceholderDialogSubmit(placeholderInput.value)"
+              (keyup.escape)="onPlaceholderDialogClose()">
+            </div>
+            <div class="dialog-actions">
+              <button class="btn btn-secondary" (click)="onPlaceholderDialogClose()">Cancel</button>
+              <button class="btn btn-primary" (click)="onPlaceholderDialogSubmit(placeholderInput.value)">Convert</button>
+            </div>
+            <!-- Context Menu for Grouped Elements -->
+            @if (contextMenuVisible) {
+              <div class="context-menu"
+                [style.left.px]="contextMenuPosition.x"
+                [style.top.px]="contextMenuPosition.y">
+                @if (contextMenuElement && isElementGrouped(contextMenuElement.id)) {
+                  <div class="context-menu-item"
+                    (click)="onUngroupSingleElement(contextMenuElement)">
+                    <svg class="context-menu-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 7V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V7M3 7V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V7M3 7H21M8 9H10M8 13H10M14 9H16M14 13H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Ungroup Element</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Smart Layout Connection Line -->
+      @if (showConnectionLine && isSmartLayoutMode && connectionLine) {
+        <div class="connection-line-overlay">
+          <svg class="connection-line-svg">
+            <line class="connection-line"
+              [attr.x1]="connectionLine.startX"
+              [attr.y1]="connectionLine.startY"
+              [attr.x2]="connectionLine.endX"
+              [attr.y2]="connectionLine.endY"
+              stroke="#3b82f6"
+              stroke-width="1.5"
+              stroke-dasharray="4,4"
+              fill="none"/>
+            </svg>
+          </div>
+        }
+
+
+        <!-- Padding indicators removed -->
+
+        <!-- Image Import Dialog -->
+        @if (showImageImportDialog) {
+          <div class="image-import-dialog-overlay" (click)="onCloseImageImportDialog()">
+            <div class="image-import-dialog-container" (click)="$event.stopPropagation()">
+              <app-image-import
+                (imageImported)="onImageImported($event)"
+                (closeDialog)="onCloseImageImportDialog()">
+              </app-image-import>
+            </div>
+          </div>
+        }
+
+  <!-- [CHANGE] Comment System Components -->
+  
+  <!-- Comment Dialog -->
+  <div class="comment-dialog-overlay" *ngIf="showCommentDialog" (click)="cancelComment()">
+    <div class="comment-dialog" (click)="$event.stopPropagation()">
+      <div class="comment-dialog-header">
+        <h3>{{ editingCommentId ? 'Edit Comment' : 'Add Comment' }}</h3>
+        <button class="close-button" (click)="cancelComment()">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="comment-dialog-content">
+        <!-- <div class="comment-position-info">
+          <span class="position-label">Position:</span>
+          <span class="position-coords">X: {{ commentPosition?.x | number:'1.0-0' }}, Y: {{ commentPosition?.y | number:'1.0-0' }}</span>
+        </div> -->
+        
+        <div class="form-group">
+          <label for="commentText">Comment:</label>
+          <textarea 
+            id="commentText"
+            [(ngModel)]="newCommentText"
+            class="comment-textarea"
+            placeholder="Enter your comment here..."
+            rows="4"
+            maxlength="500"
+            autofocus>
+          </textarea>
+          <div class="character-count">{{ newCommentText.length }}/500</div>
+        </div>
+      </div>
+      
+      <div class="comment-dialog-actions">
+        <button class="cancel-btn" (click)="cancelComment()">Cancel</button>
+        <button class="add-btn" 
+                (click)="addComment()"
+                [disabled]="!newCommentText.trim()"
+                type="button">
+          {{ editingCommentId ? 'Update Comment' : 'Add Comment' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- [CHANGE] Resolve Comment Dialog -->
+  <div class="comment-dialog-overlay" *ngIf="showResolveCommentDialog" (click)="cancelResolveComment()">
+    <div class="comment-dialog" (click)="$event.stopPropagation()">
+      <div class="comment-dialog-header">
+        <h3>Resolve Comment</h3>
+        <button class="close-button" (click)="cancelResolveComment()">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="comment-dialog-content">
+        <div class="form-group">
+          <label for="resolveCommentText">Add resolve comments (optional):</label>
+          <textarea 
+            id="resolveCommentText"
+            [(ngModel)]="resolveCommentText"
+            class="comment-textarea"
+            placeholder="Add your response to the comment (optional)..."
+            rows="4"
+            maxlength="500"
+            autofocus>
+          </textarea>
+          <div class="character-count">{{ resolveCommentText.length }}/500</div>
+        </div>
+      </div>
+      
+      <div class="comment-dialog-actions">
+        <button class="cancel-btn" 
+                (click)="cancelResolveComment()"
+                type="button">
+          Cancel
+        </button>
+        <button class="resolve-btn" 
+                (click)="confirmResolveComment()"
+                type="button">
+          Resolve Comment
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+
